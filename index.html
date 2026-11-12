@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#142b45">
   <meta name="description" content="CEL、Energy Star 9.0 電源測試數值換算、加權計算與共用 SPEC 查閱工具">
-  <title>工程數值計算工具 V1.5</title>
+  <title>工程數值計算工具 V1.6｜登入</title>
   <style>
     :root{font-family:Inter,"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;color:#193048;background:#f3f6fa;font-synthesis:none}
     *{box-sizing:border-box}body{margin:0;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}a{color:#0b857a}
@@ -90,12 +90,54 @@
     .sidematch strong{font-size:clamp(30px,3vw,38px);font-weight:950;line-height:1.35}
     .unit-caution{margin:12px 0 0;font-size:12px;line-height:1.7;color:#685d39;background:#fff8e8;border:1px solid #ebdcad;padding:11px 13px;border-radius:9px}
     @media(max-width:550px){.power-grid,.conversion-grid{grid-template-columns:1fr}.power-card,.convert-card{min-height:104px;padding:13px}.compare-top{flex-direction:column;align-items:stretch}.status-pill{width:100%;font-size:38px;min-height:78px}.comparison{padding:14px}.compare-stat span{font-size:12px}.compare-stat strong{font-size:20px}}
+
+    /* V1.6 - 簡易帳號密碼入口：僅前端遮罩，無法保護公開靜態檔案 */
+    .protected-app{display:none}
+    body.is-logged-in .protected-app{display:block}
+    body.is-logged-in .login-screen{display:none}
+    .login-screen{min-height:100vh;display:grid;place-items:center;padding:30px 18px;background:radial-gradient(circle at 75% 15%,#d9f3ed 0%,transparent 44%),linear-gradient(145deg,#e9f2f8,#f7fafc)}
+    .login-card{width:100%;max-width:440px;background:white;border:1px solid #d8e5ed;border-radius:22px;box-shadow:0 24px 75px rgba(25,51,73,.14);padding:34px 32px}
+    .login-mark{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:16px;background:#dff6ef;color:#117c70;font-weight:900;font-size:28px;margin-bottom:19px}
+    .login-card h1{font-size:clamp(24px,4.4vw,29px);color:#142e42;line-height:1.35;margin:0 0 9px;letter-spacing:-.03em}
+    .login-subtitle{font-size:14px;color:#607789;line-height:1.75;margin:0 0 25px}
+    .login-field{margin-bottom:18px}.login-field label{font-size:14px;margin-bottom:9px}
+    .login-field input{min-height:55px;font-size:17px;padding:13px 15px}
+    .login-button{display:block;width:100%;min-height:54px;border-radius:11px;border:0;background:#087d71;color:white;font-size:19px;font-weight:850;cursor:pointer;margin-top:6px}
+    .login-button:hover,.login-button:focus-visible{background:#086b62}
+    .login-error{min-height:23px;margin-top:13px;color:#b8323f;font-size:14px;font-weight:750;line-height:1.6}
+    .login-caution{font-size:12px;line-height:1.75;color:#7a8794;border-top:1px solid #e3ebef;padding-top:16px;margin:7px 0 0}
+    .login-actions{display:flex;align-items:center;gap:10px}
+    .show-pass{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13px;color:#4e667a;cursor:pointer;margin:0 0 18px}
+    .show-pass input{height:18px;width:18px;accent-color:#087d71}
+    .logout-button{border:1px solid #83a2ba;background:#244d69;color:#fff;border-radius:11px;padding:12px 17px;min-height:44px;font-size:14px;font-weight:800;cursor:pointer}
+    .logout-button:hover{background:#376480}
+    .topbar-controls{display:flex;gap:11px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    @media(max-width:550px){.login-card{padding:28px 21px}.topbar-controls{align-items:flex-end;flex-direction:column}.version{font-size:11px}.logout-button{padding:10px 12px}}
   </style>
 </head>
 <body>
+  <!-- V1.6：僅用來隱藏一般使用者介面，並非真正的伺服器端驗證。 -->
+  <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <div class="login-card">
+      <div class="login-mark" aria-hidden="true">∑</div>
+      <p class="eyebrow" style="color:#087c71">ENGINEERING DATA WORKSPACE</p>
+      <h1 id="loginTitle">工程數值計算工具</h1>
+      <p class="login-subtitle">CEL ／ Energy Star 9.0<br>請輸入帳號與密碼，以繼續使用計算頁面。</p>
+      <form id="loginForm" autocomplete="on">
+        <div class="login-field"><label for="loginUsername">使用者帳號</label><input id="loginUsername" name="username" type="text" placeholder="請輸入帳號" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+        <div class="login-field"><label for="loginPassword">登入密碼</label><input id="loginPassword" name="password" type="password" placeholder="請輸入密碼" autocomplete="current-password" required></div>
+        <label class="show-pass" for="showLoginPassword"><input id="showLoginPassword" type="checkbox">顯示密碼</label>
+        <button class="login-button" type="submit">登入計算工具</button>
+        <div class="login-error" id="loginError" role="alert" aria-live="polite"></div>
+      </form>
+      <p class="login-caution">這是簡易網頁入口，不等於資料加密或真正的身分驗證。請勿在公開的 GitHub 網站儲存個資或機密 SPEC。</p>
+    </div>
+  </section>
+  <div id="appRoot" class="protected-app" hidden>
+
   <header class="topbar"><div class="topbar-inner">
     <div><p class="eyebrow">ENGINEERING DATA WORKSPACE</p><h1>工程數值計算工具</h1><p class="tagline">CEL / Energy Star 9.0 · 電源換算 · 加權計算 · V74 / V75 / V77 SPEC</p></div>
-    <span class="version">v1.5</span>
+    <div class="topbar-controls"><span class="version">v1.6</span><button type="button" id="logoutButton" class="logout-button">登出</button></div>
   </div></header>
   <main>
     <p class="intro">量測值與計算都在你的瀏覽器中處理。網站正式 SPEC 由檔案管理，不需要雲端資料庫；本機編輯草稿只影響目前瀏覽器，發布後所有裝置才會讀到同一份正式 SPEC。</p>
@@ -205,7 +247,60 @@
       <div class="table-outer"><table id="recordsTable"><thead><tr><th>分類</th><th>系列</th><th>完整機種</th><th>RAM 配置</th><th>總容量</th><th>換算模式</th><th>Short idle 原始</th><th>Long idle 原始</th><th>S3/Modern 原始</th><th>S5 原始</th><th>Short idle*</th><th>Long idle*</th><th>S3*</th><th>S5*</th><th>加權結果</th><th>加權 SPEC</th><th>判定</th><th>操作</th></tr></thead><tbody id="recordsBody"></tbody></table><div id="emptyState" class="empty">目前尚無本機紀錄。在上方填寫並儲存即可；若更換瀏覽器或裝置，本機紀錄不會同步。</div></div>
     </section>
   </main>
-  <footer class="foot">Engineering Data Workspace · GitHub Pages 靜態網頁 · 共用 SPEC 與個人測試紀錄分開管理 · v1.5</footer>
+  <footer class="foot">Engineering Data Workspace · GitHub Pages 靜態網頁 · 共用 SPEC 與個人測試紀錄分開管理 · v1.6</footer>
+  </div><!-- /appRoot -->
+  <script>
+    (() => {
+      'use strict';
+      // 僅示範前端帳密檢查：公開 HTML 可被檢視及繞過，切勿用於機密資料保護。
+      const DEMO_ACCOUNT = 'RD411';
+      const DEMO_PASSWORD = '123456';
+      const SESSION_KEY = 'engineering-calculator-v1-6-demo-signed-in';
+      const form = document.getElementById('loginForm');
+      const username = document.getElementById('loginUsername');
+      const password = document.getElementById('loginPassword');
+      const error = document.getElementById('loginError');
+      const screen = document.getElementById('loginScreen');
+      const app = document.getElementById('appRoot');
+      const show = document.getElementById('showLoginPassword');
+      const logout = document.getElementById('logoutButton');
+      function setSession(value) {
+        try { if (value) sessionStorage.setItem(SESSION_KEY, '1'); else sessionStorage.removeItem(SESSION_KEY); } catch (_) { /* 隱私模式仍允許當次登入 */ }
+      }
+      function hasSession() {
+        try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) { return false; }
+      }
+      function switchView(signedIn) {
+        screen.hidden = signedIn;
+        app.hidden = !signedIn;
+        document.body.classList.toggle('is-logged-in', signedIn);
+        if (!signedIn) username.focus();
+      }
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        if (username.value.trim() === DEMO_ACCOUNT && password.value === DEMO_PASSWORD) {
+          setSession(true);
+          password.value = '';
+          error.textContent = '';
+          switchView(true);
+        } else {
+          setSession(false);
+          error.textContent = '帳號或密碼不正確，請重新輸入。';
+          password.value = '';
+          password.focus();
+        }
+      });
+      show.addEventListener('change', () => { password.type = show.checked ? 'text' : 'password'; });
+      logout.addEventListener('click', () => {
+        setSession(false);
+        form.reset();
+        password.type = 'password';
+        error.textContent = '';
+        switchView(false);
+      });
+      switchView(hasSession());
+    })();
+  </script>
   <script src="./specs.js"></script>
   <script>
     (() => {
@@ -472,7 +567,7 @@
       }
       $('exportSpecJs').addEventListener('click',()=>{
         const obj={schemaVersion:2,updatedAt:new Date().toISOString(),items:mergeSpecs()};
-        const content='// 工程數值計算工具 V1.5 — 網站共用加權結果 SPEC，更新須經 GitHub 發布。\nwindow.ENGINEERING_SPECS = '+JSON.stringify(obj,null,2)+';\n';
+        const content='// 工程數值計算工具 V1.6 — 網站共用加權結果 SPEC，更新須經 GitHub 發布。\nwindow.ENGINEERING_SPECS = '+JSON.stringify(obj,null,2)+';\n';
         download(content,'text/javascript;charset=utf-8','specs.js');
         announce('specNotice','已下載 specs.js；請上傳並提交到 GitHub 原網站，其他人的手機與電腦才會更新。','success');
       });
@@ -494,7 +589,7 @@
           return [r.category||'未分類',r.series||seriesFromModel(r.model),r.model,r.ramGb,r.ramCount,Number(r.ramGb)*Number(r.ramCount),r.unit,v.calc.mode==='manual'?'手動填寫':'自動換算',r.shortIdle??'',r.longIdle??'',r.sleepValue??'',r.s5??'',c.a??'',c.b??'',c.c??'',c.d??'',v.calc.total??'',v.spec??'',v.status==='pending'?'未判定':v.status.toUpperCase()];
         });
         const csv='\ufeff'+[header,...rows].map(row=>row.map(safeCsv).join(',')).join('\r\n');
-        download(csv,'text/csv;charset=utf-8','engineering_calculator_v1-5.csv');
+        download(csv,'text/csv;charset=utf-8','engineering_calculator_v1-6.csv');
         announce('notice','已匯出 CSV，包含換算模式、加權 SPEC 與 PASS／FAIL（按目前可見的 SPEC 判定）。','success');
       });
       $('clearAll').addEventListener('click',()=>{
