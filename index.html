@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142b45">
+  <meta name="description" content="CEL、Energy Star 9.0 電源測試數值換算、加權計算與共用 SPEC 查閱工具">
+  <title>工程數值計算工具 V1.5</title>
+  <style>
+    :root{font-family:Inter,"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;color:#193048;background:#f3f6fa;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}a{color:#0b857a}
+    .topbar{background:linear-gradient(110deg,#13293f,#1b4261);color:white;border-bottom:4px solid #40bea9}
+    .topbar-inner{max-width:1200px;margin:auto;padding:24px 25px 26px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+    .eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;color:#80d7c7;margin:0 0 7px}
+    h1{font-size:clamp(23px,3.5vw,34px);line-height:1.25;letter-spacing:-.035em;margin:0 0 7px;font-weight:850}
+    .tagline{font-size:13px;color:#c9d8e6;line-height:1.6;margin:0}.version{font-size:12px;white-space:nowrap;color:#e1f9f5;background:#254b66;border:1px solid #4c7086;border-radius:30px;padding:8px 13px}
+    main{max-width:1200px;margin:0 auto;padding:24px 24px 58px}.intro{margin:0 0 20px;color:#50667c;font-size:13px;line-height:1.8}
+    .layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:20px;align-items:start}
+    .card{background:#fff;border:1px solid #dfe8ef;border-radius:17px;box-shadow:0 9px 35px rgba(28,56,79,.035)}.content{padding:26px}.side{padding:25px;position:sticky;top:16px}
+    .kicker{color:#118a7e;font-weight:850;letter-spacing:.12em;font-size:11px;margin:0 0 8px}h2{font-size:20px;line-height:1.3;margin:0;font-weight:850;letter-spacing:-.025em}h3{font-size:16px;line-height:1.4;margin:0 0 9px;font-weight:800}
+    .desc{color:#718395;font-size:12px;line-height:1.8;margin:7px 0 0}.section-header{margin-bottom:21px}.section-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:850;margin:0 0 15px}
+    .index{width:27px;height:27px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#e7f7f3;color:#0d8274;font-size:12px}
+    .fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:15px}.field{min-width:0}.full{grid-column:1/-1}label{display:block;font-size:12px;font-weight:760;color:#355067;margin-bottom:7px}.req{color:#d94c55}
+    input,select{width:100%;min-height:44px;border:1px solid #cbd9e5;border-radius:9px;padding:10px 12px;background:white;color:#21384d;outline:none}input:focus,select:focus{border-color:#1ca899;box-shadow:0 0 0 3px rgba(28,168,153,.14)}input::placeholder{color:#9caab9}
+    .help{font-size:11px;color:#718398;line-height:1.7;margin:6px 0 0}.readout{min-height:44px;background:#ebf9f4;border:1px solid #c5e8df;border-radius:9px;color:#08766e;font-size:16px;font-weight:850;display:flex;align-items:center;padding:10px 12px}
+    hr{height:1px;border:0;background:#e6edf3;margin:26px 0}.mode-box{padding:14px;border-radius:11px;background:#f4f8fb;border:1px solid #e2ebf1;margin:15px 0}.mode-caption{margin:0 0 12px;color:#577087;font-size:12px;line-height:1.6}
+    .conversion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:16px 0 16px}.convert-card{padding:14px;border-radius:11px;background:#f7fbfc;border:1px solid #d7e6ea;min-width:0}
+    .convert-label{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}.convert-label span{font-size:13px;font-weight:850;color:#0c8278}.convert-label small{font-size:10px;color:#758899}.convert-card strong{display:inline-block;font-size:clamp(17px,2.1vw,24px);color:#203a4e;overflow-wrap:anywhere;line-height:1.4;font-variant-numeric:tabular-nums}
+    .converted-unit{font-size:11px;color:#74889a;margin-left:5px}.final-result{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:center;background:linear-gradient(110deg,#e6f8f1,#f6fffc);border:1px solid #9bdacb;border-radius:12px;padding:18px}
+    .result-overline{font-size:12px;font-weight:850;color:#16786d;margin:0 0 6px}.final-result strong{font-size:clamp(23px,3vw,34px);color:#0a776a;letter-spacing:-.04em;overflow-wrap:anywhere}.result-status{font-size:11px;color:#55877e;line-height:1.5;margin:6px 0 0}
+    .formula-text{border-left:1px solid #b7dacf;padding-left:15px;color:#3e6a61;font-size:12px;line-height:1.9;overflow-wrap:anywhere}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:21px}.btn{min-height:43px;padding:10px 15px;border-radius:9px;border:1px solid transparent;font-size:12px;font-weight:850}
+    .btn-primary{background:#0a9286;color:white}.btn-primary:hover{background:#08796f}.btn-outline{background:white;color:#405b72;border-color:#ccd9e4}.btn-outline:hover{background:#f3f8fa}.btn:disabled{opacity:.45;cursor:not-allowed}
+    .notice{min-height:19px;font-size:12px;line-height:1.7;color:#4c6377;margin-top:12px}.notice[data-type=error]{color:#b8323f}.notice[data-type=success]{color:#087d6d}
+    .stats{background:#f5fafb;border:1px solid #e3edf0;border-radius:12px;padding:17px}.stats p{font-size:11px;color:#718399;margin:0}.stats strong{display:block;color:#1b3b52;font-size:29px;margin:5px 0;font-weight:850}.mini-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e9eff4;font-size:12px}.mini-line:last-child{border:0}.mini-line span{color:#73869a}.mini-line strong{color:#2e475d;text-align:right;overflow-wrap:anywhere}
+    .side-total{background:#e7f8f1;border:1px solid #ccebe0;border-radius:11px;padding:13px;margin-top:16px}.side-total p{font-size:12px;font-weight:800;color:#278072;margin:0 0 6px}.side-total strong{font-size:26px;color:#0c776c;overflow-wrap:anywhere}.side-total small{display:block;color:#66897e;font-size:11px;margin-top:5px}
+    .spec-preview{margin-top:18px;border-top:1px solid #e4ecf2;padding-top:18px}.spec-preview h3{margin-bottom:5px}.spec-note{font-size:11px;color:#76899a;line-height:1.8;margin:0 0 8px}.spec-row{display:flex;justify-content:space-between;gap:9px;font-size:12px;padding:8px 0;border-bottom:1px dashed #e3ebf1}.spec-row span{color:#6a7f93}.spec-row strong{color:#26546a;font-variant-numeric:tabular-nums}.spec-tag{display:inline-block;font-size:10px;font-weight:800;padding:4px 8px;border-radius:12px;background:#e9f6f4;color:#08796e}
+    .records,.spec-manager{margin-top:21px}.record-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:22px 22px 12px}.record-actions{display:flex;gap:9px;flex-wrap:wrap}.record-actions .btn{min-height:36px;padding:8px 11px}.table-outer{width:100%;overflow-x:auto;padding:0 15px 17px}.table-outer table{border-collapse:collapse;min-width:1520px;width:100%;font-size:12px;text-align:left}th{padding:12px 10px;background:#f5f8fb;color:#697f91;white-space:nowrap}td{padding:12px 10px;border-bottom:1px solid #e9eef3;white-space:nowrap;color:#284159}.empty{font-size:12px;text-align:center;padding:25px;color:#8293a4}.btn-danger{border:0;background:#ffedf0;color:#bb3948;padding:7px 9px;font-size:11px;border-radius:7px}
+    .manager-inner{padding:4px 22px 25px}.manager-callout{border-radius:11px;border:1px solid #d1e3eb;background:#f3f8fb;padding:14px 16px;margin:6px 0 18px;font-size:12px;color:#536d82;line-height:1.9}.manager-callout strong{color:#204b67}.manager-form{border:1px solid #e2eaf0;border-radius:12px;padding:17px}.manager-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.manager-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.manager-subtitle{font-size:13px;font-weight:850;margin:17px 0 5px}.manager-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.manager-form input{background:#fcfdfe}.status-line{font-size:11px;color:#6a8295;line-height:1.7;margin-top:12px}.manager-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #e6ecf1;margin-top:18px;padding-top:15px}.hidden{display:none!important}
+    details{margin-top:14px}summary{font-size:13px;font-weight:800;color:#116e65;cursor:pointer;padding:8px 0;list-style-position:outside}.foot{max-width:1200px;padding:0 24px 26px;margin:auto;color:#8294a2;font-size:11px;text-align:center}
+    @media(max-width:840px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static}.content{padding:22px}.manager-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:550px){.topbar-inner{padding:23px 16px;align-items:flex-start}main{padding:19px 12px 38px}.content,.side{padding:18px 15px}.fields{grid-template-columns:minmax(0,1fr)}.final-result{grid-template-columns:1fr}.formula-text{border-left:0;border-top:1px solid #b7dacf;padding:12px 0 0}.convert-card{padding:11px}.manager-inner{padding:4px 14px 20px}.record-head{padding:20px 14px 12px}.manager-values{grid-template-columns:repeat(2,minmax(0,1fr))}.manager-form{padding:13px}.actions .btn{flex:1}.record-actions{width:100%}.record-actions .btn{flex:1}.tagline{font-size:12px}}
+
+    [hidden]{display:none!important}
+    .mode-switch{background:#f3f8fb;border:1px solid #dbe9f0;border-radius:12px;padding:16px;margin:12px 0 14px}
+    .mode-switch-title{font-size:13px;font-weight:800;color:#355067;margin:0 0 10px}
+    .mode-options{display:flex;flex-wrap:wrap;gap:10px}
+    .mode-option{display:inline-flex;align-items:center;gap:8px;margin:0;color:#2a4a61;font-size:13px;font-weight:700;border:1px solid #ccdae5;border-radius:9px;background:white;padding:10px 13px;cursor:pointer}
+    .mode-option:has(input:checked){background:#e8f8f3;border-color:#2ab29f;color:#077769}
+    .mode-option input{min-height:0;width:auto;margin:0;accent-color:#078a7e}
+    .manual-star{margin-top:0;min-height:43px;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+    .convert-card:has(.manual-star:not([hidden])){background:#f3faff;border-color:#bbdce9}
+    .comparison{margin-top:16px;padding:18px;border:1px solid #d8e4eb;border-radius:12px;background:#f6f9fb;transition:background .15s}
+    .comparison[data-status=pass]{background:#edfaf5;border-color:#94dcc5}
+    .comparison[data-status=fail]{background:#fff1f0;border-color:#efb1ad}
+    .compare-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px}
+    .compare-top h3{margin:0;font-size:14px}
+    .status-pill{padding:6px 12px;border-radius:999px;background:#e5edf3;color:#546a7d;font-size:12px;font-weight:900;letter-spacing:.03em}
+    .comparison[data-status=pass] .status-pill{background:#c7efdf;color:#086447}
+    .comparison[data-status=fail] .status-pill{background:#fdd8d4;color:#ae2424}
+    .compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+    .compare-stat{background:#ffffffbb;border:1px solid #e0eaf0;border-radius:9px;padding:12px 10px;min-width:0}
+    .compare-stat span{display:block;font-size:11px;color:#71869a;margin-bottom:6px}
+    .compare-stat strong{font-size:clamp(15px,2vw,22px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#234359}
+    .compare-caption{margin:11px 0 0;color:#647d8f;font-size:11px;line-height:1.7}
+    .single-spec{max-width:390px}
+    .sidematch{margin:14px 0 0;padding:13px;border:1px solid #d9e7ed;border-radius:10px;background:#f6f9fc}
+    .sidematch strong{display:block;font-size:18px;margin:5px 0;color:#526c80}
+    .sidematch[data-status=pass]{background:#eaf9f1;border-color:#9fdfc5}.sidematch[data-status=pass] strong{color:#087449}
+    .sidematch[data-status=fail]{background:#fff0ee;border-color:#efb0aa}.sidematch[data-status=fail] strong{color:#b32d2d}
+    @media(max-width:550px){.compare-grid{grid-template-columns:1fr 1fr}.compare-stat:last-child{grid-column:1/-1}.mode-options{flex-direction:column}.mode-option{width:100%}}
+
+    /* V1.5: fixed mW, input grid sizing parity, high-visibility result */
+    .unit-title{font-size:13px;font-weight:750;color:#607991;letter-spacing:0}
+    .power-grid,.conversion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 16px}
+    .conversion-grid{margin-top:16px}
+    .power-card,.convert-card{display:flex;flex-direction:column;justify-content:space-between;min-width:0;min-height:124px;padding:14px;border-radius:11px;background:#f7fbfc;border:1px solid #d7e6ea}
+    .power-card label,.convert-card .convert-label{margin:0 0 12px;min-height:24px;display:flex;align-items:center;font-size:13px;font-weight:850;line-height:1.45}
+    .convert-label span{font-size:13px}
+    .power-card .uniform-control,.convert-card .uniform-control{display:flex;align-items:center;width:100%;height:50px;min-height:50px;max-width:100%;border:1px solid #cbd9e5;border-radius:9px;padding:10px 12px;background:#fff;color:#203a4e;font-size:17px;line-height:1.4;font-weight:800;font-variant-numeric:tabular-nums}
+    .convert-card .auto-value{font-size:17px;overflow-wrap:anywhere}
+    .convert-card .manual-star{margin:0}
+    .convert-card .converted-unit{display:none}
+    .comparison{padding:20px}
+    .compare-top{align-items:center;gap:14px;margin-bottom:18px}
+    .compare-top h3{font-size:18px;line-height:1.45}
+    .status-pill{display:inline-flex;align-items:center;justify-content:center;min-width:175px;min-height:76px;padding:10px 23px;border-radius:17px;border:2px solid #cbd8e3;font-size:clamp(30px,4vw,42px);font-weight:950;line-height:1.1;letter-spacing:.02em;white-space:nowrap;color:#354e62;background:#e5edf3}
+    .comparison[data-status=pass] .status-pill{background:#c2edda;border-color:#0a8455;color:#075332}
+    .comparison[data-status=fail] .status-pill{background:#ffd7d1;border-color:#c43d34;color:#991c1c}
+    .sidematch{padding:17px}
+    .sidematch strong{font-size:clamp(30px,3vw,38px);font-weight:950;line-height:1.35}
+    .unit-caution{margin:12px 0 0;font-size:12px;line-height:1.7;color:#685d39;background:#fff8e8;border:1px solid #ebdcad;padding:11px 13px;border-radius:9px}
+    @media(max-width:550px){.power-grid,.conversion-grid{grid-template-columns:1fr}.power-card,.convert-card{min-height:104px;padding:13px}.compare-top{flex-direction:column;align-items:stretch}.status-pill{width:100%;font-size:38px;min-height:78px}.comparison{padding:14px}.compare-stat span{font-size:12px}.compare-stat strong{font-size:20px}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="topbar-inner">
+    <div><p class="eyebrow">ENGINEERING DATA WORKSPACE</p><h1>工程數值計算工具</h1><p class="tagline">CEL / Energy Star 9.0 · 電源換算 · 加權計算 · V74 / V75 / V77 SPEC</p></div>
+    <span class="version">v1.5</span>
+  </div></header>
+  <main>
+    <p class="intro">量測值與計算都在你的瀏覽器中處理。網站正式 SPEC 由檔案管理，不需要雲端資料庫；本機編輯草稿只影響目前瀏覽器，發布後所有裝置才會讀到同一份正式 SPEC。</p>
+    <div class="layout">
+      <section class="card content" aria-labelledby="formtitle">
+        <div class="section-header"><p class="kicker">01 / TEST INPUT</p><h2 id="formtitle">新增測試資料</h2><p class="desc">選擇機種系列、分類與 RAM 組態，輸入量測值或手動填寫換算值，立即顯示加權結果與 SPEC 的 PASS／FAIL 判定。</p></div>
+        <form id="measureForm">
+          <p class="section-title"><span class="index">1</span> 基本資料</p>
+          <div class="fields">
+            <div class="field"><label for="category">測試分類 <span class="req">*</span></label><select id="category" name="category" required><option value="">請選擇分類</option><option>CEL</option><option>Energy Star 9.0</option></select></div>
+            <div class="field"><label for="series">機種系列（SPEC） <span class="req">*</span></label><select id="series" name="series" required><option value="">請選擇系列</option><option>V74</option><option>V75</option><option>V77</option></select></div>
+            <div class="field full"><label for="model">完整機種名稱 <span class="req">*</span></label><input id="model" name="model" placeholder="例如：V74AU4" maxlength="100" autocomplete="off" required><p class="help">輸入 V74 / V75 / V77 開頭的名稱，會自動帶入對應系列，也可自行變更。</p></div>
+            <div class="field"><label for="ramGb">單條 RAM 容量（GB） <span class="req">*</span></label><select id="ramGb" required><option value="">請選擇</option><option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option></select></div>
+            <div class="field"><label for="ramCount">RAM 數量（條） <span class="req">*</span></label><select id="ramCount" required><option value="">請選擇</option><option value="1">1 條</option><option value="2">2 條</option></select></div>
+            <div class="field full"><label>RAM 總容量</label><div class="readout" id="ramTotal">— GB</div></div>
+          </div>
+          <hr>
+          <p class="section-title"><span class="index">2</span> 電源狀態原始數值 <span class="unit-title">（單位：mW）</span></p>
+          <p class="help" style="margin:-6px 0 14px">四個原始數值皆為 mW（毫瓦），不需要選擇單位。切換「自己填寫換算值」後，此區可留空。</p>
+          <div class="power-grid">
+            <div class="power-card"><label for="shortIdle">Short idle（mW） <span class="req auto-required">*</span></label><input id="shortIdle" class="uniform-control" type="number" min="0" step="any" inputmode="decimal" placeholder="請輸入數值" required></div>
+            <div class="power-card"><label for="longIdle">Long idle（mW） <span class="req auto-required">*</span></label><input id="longIdle" class="uniform-control" type="number" min="0" step="any" inputmode="decimal" placeholder="請輸入數值" required></div>
+            <div class="power-card"><label for="sleepValue">S3或Modern Standby（mW） <span class="req auto-required">*</span></label><input id="sleepValue" class="uniform-control" type="number" min="0" step="any" inputmode="decimal" placeholder="請輸入數值" required></div>
+            <div class="power-card"><label for="s5">S5（mW） <span class="req auto-required">*</span></label><input id="s5" class="uniform-control" type="number" min="0" step="any" inputmode="decimal" placeholder="請輸入數值" required></div>
+          </div>
+          <hr>
+          <p class="section-title"><span class="index">3</span> 換算結果（自動／手動）</p>
+          <div class="mode-switch" role="group" aria-label="換算數值輸入方式">
+            <p class="mode-switch-title">換算結果的取得方式</p>
+            <div class="mode-options">
+              <label class="mode-option"><input type="radio" name="conversionMode" value="auto" checked> 網頁自動換算</label>
+              <label class="mode-option"><input type="radio" name="conversionMode" value="manual"> 自己填寫換算值</label>
+            </div>
+            <p id="conversionHelp" class="help">自動模式：Short idle、Long idle、S3或Modern Standby、S5 原始值 × 12 ÷ 1000。</p>
+          </div>
+          <div class="conversion-grid" aria-live="polite">
+            <div class="convert-card"><div class="convert-label"><span>Short idle*</span><small id="labelShort">自動換算</small></div><strong class="auto-value uniform-control" id="convertedShort">—</strong><input class="manual-star uniform-control" id="manualShort" type="number" min="0" step="any" placeholder="輸入 Short idle*" aria-label="手動填寫 Short idle*" hidden disabled><span class="converted-unit" data-converted-unit></span></div>
+            <div class="convert-card"><div class="convert-label"><span>Long idle*</span><small id="labelLong">自動換算</small></div><strong class="auto-value uniform-control" id="convertedLong">—</strong><input class="manual-star uniform-control" id="manualLong" type="number" min="0" step="any" placeholder="輸入 Long idle*" aria-label="手動填寫 Long idle*" hidden disabled><span class="converted-unit" data-converted-unit></span></div>
+            <div class="convert-card"><div class="convert-label"><span>S3*</span><small id="labelSleep">自動換算</small></div><strong class="auto-value uniform-control" id="convertedSleep">—</strong><input class="manual-star uniform-control" id="manualSleep" type="number" min="0" step="any" placeholder="輸入 S3*" aria-label="手動填寫 S3*" hidden disabled><span class="converted-unit" data-converted-unit></span></div>
+            <div class="convert-card"><div class="convert-label"><span>S5*</span><small id="labelS5">自動換算</small></div><strong class="auto-value uniform-control" id="convertedS5">—</strong><input class="manual-star uniform-control" id="manualS5" type="number" min="0" step="any" placeholder="輸入 S5*" aria-label="手動填寫 S5*" hidden disabled><span class="converted-unit" data-converted-unit></span></div>
+          </div>
+          <div class="final-result" aria-live="polite"><div><p class="result-overline">最終加權結果</p><strong id="weightedResult">—</strong><p id="resultStatus" class="result-status">請輸入四項量測值</p></div><div class="formula-text">(Short idle* × 0.2 + Long idle* × 0.1 + S3* × 0.6 + S5* × 0.1) × 8.76</div></div>
+          <p class="help">原始數值固定為 mW；四項星號值依「原始值 × 12 ÷ 1000」換算，加權公式不變。系統不預先四捨五入，手動模式請確認四個輸入值與自動模式的計算基準一致。</p>
+          <div class="comparison" id="comparisonPanel" data-status="pending" aria-live="polite">
+            <div class="compare-top"><h3>加權結果與 SPEC 比較</h3><span id="comparisonBadge" class="status-pill" role="status" aria-live="polite">未判定</span></div>
+            <div class="compare-grid">
+              <div class="compare-stat"><span>本次加權結果（同 SPEC 比較基準）</span><strong id="comparisonMeasured">—</strong></div>
+              <div class="compare-stat"><span>SPEC 上限（KW/Hr）</span><strong id="comparisonSpec">未設定</strong></div>
+              <div class="compare-stat"><span>剩餘額度（SPEC − 結果）</span><strong id="comparisonGap">—</strong></div>
+            </div>
+            <p id="comparisonMessage" class="compare-caption">請先填入四個換算值，並設定對應的 SPEC。</p>
+          </div>
+          <div class="actions"><button type="submit" class="btn btn-primary">＋ 儲存這筆紀錄</button><button type="reset" class="btn btn-outline">清除輸入</button></div>
+          <div class="notice" id="notice" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+      <aside class="card side" aria-labelledby="previewtitle">
+        <p class="kicker">02 / LIVE PREVIEW</p><h2 id="previewtitle">測試摘要</h2><p class="desc">數值及對應 SPEC 隨選擇更新。本機有 SPEC 草稿時，先以草稿判定。</p>
+        <div class="stats"><p>RAM 總容量</p><strong id="previewRam">— GB</strong><p id="previewRamConfig">等待輸入 RAM 配置</p></div>
+        <div style="margin-top:13px">
+          <div class="mini-line"><span>測試分類</span><strong id="previewCategory">—</strong></div>
+          <div class="mini-line"><span>機種系列</span><strong id="previewSeries">—</strong></div>
+          <div class="mini-line"><span>完整機種名稱</span><strong id="previewModel">—</strong></div>
+          <div class="mini-line"><span>Short idle</span><strong id="previewShort">—</strong></div>
+          <div class="mini-line"><span>Long idle</span><strong id="previewLong">—</strong></div>
+          <div class="mini-line"><span id="previewModeLabel">S3 / Modern Standby</span><strong id="previewSleep">—</strong></div>
+          <div class="mini-line"><span>S5</span><strong id="previewS5">—</strong></div>
+        </div>
+        <div class="side-total"><p>最終加權結果</p><strong id="previewWeighted">—</strong><small id="previewWeightedUnit">待輸入數值</small></div>
+        <div class="spec-preview" aria-labelledby="specpreviewtitle"><p class="kicker">03 / SPEC LIMIT</p><h3 id="specpreviewtitle">對應的加權 SPEC</h3><p class="spec-note" id="specMatch">請選擇系列、分類、RAM 容量與條數。</p>
+          <div class="spec-row"><span>加權結果 SPEC 上限（KW/Hr）</span><strong id="previewSpecWeighted">—</strong></div>
+          <p class="help" id="previewSpecSource">採用網站已發布的共用 SPEC；如果本機有草稿，會優先用草稿進行本機比較。</p>
+          <div class="sidematch" data-status="pending" id="sideMatch"><span class="help">加權判定</span><strong id="sideMatchResult" role="status" aria-live="polite">未判定</strong><span id="sideMatchText" class="help">SPEC 尚未設定或數值未填完整</span></div>
+        </div>
+      </aside>
+    </div>
+    <section class="card spec-manager" id="spec-manager" aria-labelledby="specmanagertitle">
+      <div class="record-head"><div><p class="kicker">04 / SPEC CONFIGURATION</p><h2 id="specmanagertitle">V74 / V75 / V77 SPEC 管理</h2><p class="desc">兩種分類 × 三種 RAM 容量 × 兩種 RAM 數量 × 三個系列，共有 36 組獨立的加權結果 SPEC。</p></div></div>
+      <div class="manager-inner">
+        <div class="manager-callout"><strong>共用 SPEC 不會因其他人輸入測試值而改變。</strong>你可以在下方編輯並保存「本機草稿」，但<strong>只有把產生的 specs.js 上傳到 GitHub 網站專案</strong>，新 SPEC 才會同步給不同裝置的使用者。一般訪客無法直接修改網站的共用 SPEC；GitHub 寫入權限才是正式發布的控制。這個管理區不是密碼保護功能。</div>
+        <details id="specEditorDetails"><summary>展開 SPEC 編輯／更新（本機草稿）</summary>
+          <div class="manager-form">
+            <p class="manager-subtitle" style="margin-top:0">選擇要設定的 SPEC 組合</p>
+            <div class="manager-grid">
+              <div class="field"><label for="editSeries">系列</label><select id="editSeries"><option>V74</option><option>V75</option><option>V77</option></select></div>
+              <div class="field"><label for="editCategory">分類</label><select id="editCategory"><option>CEL</option><option>Energy Star 9.0</option></select></div>
+              <div class="field"><label for="editRamGb">單條 RAM</label><select id="editRamGb"><option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option></select></div>
+              <div class="field"><label for="editRamCount">RAM 數量</label><select id="editRamCount"><option value="1">1 條</option><option value="2">2 條</option></select></div>
+            </div>
+            <p id="editStatus" class="status-line">載入組合中…</p>
+            <p class="manager-subtitle">輸入加權結果 SPEC 上限</p>
+            <div class="manager-values single-spec">
+              <div class="field"><label for="editWeighted">加權結果 SPEC（KW/Hr）</label><input id="editWeighted" type="number" min="0" step="any" placeholder="例如 30"></div>
+            </div>
+            <p class="help">每組只需設定一個加權結果 SPEC。計算結果 ≤ SPEC 為 PASS，超過為 FAIL。留空代表未設定（儲存後會移除這組草稿）。</p>
+            <p class="unit-caution">單位提醒：此欄依需求顯示「KW/Hr」。若實際代表每年耗電量，標準寫法應為「kWh／年」；更改標示不會改動計算公式。</p>
+            <div class="manager-actions"><button type="button" id="saveSpecDraft" class="btn btn-primary">儲存此組 SPEC 到本機草稿</button><button type="button" id="resetSpecInputs" class="btn btn-outline">重新載入這組</button></div>
+            <p id="specNotice" class="notice" role="status" aria-live="polite"></p>
+            <div class="manager-bottom"><div><p class="manager-subtitle" style="margin-top:0">讓所有人看到相同 SPEC</p><p class="desc">下載 specs.js，替換 GitHub 專案內的同名檔案並提交更新。</p></div><button class="btn btn-outline" type="button" id="exportSpecJs">下載含草稿的 specs.js</button></div>
+            <div class="manager-actions"><button class="btn btn-outline" type="button" id="clearDrafts">清除本機 SPEC 草稿（不影響已發布 SPEC）</button></div>
+          </div>
+        </details>
+      </div>
+    </section>
+    <section class="card records" aria-labelledby="recordtitle">
+      <div class="record-head"><div><p class="kicker">05 / LOCAL RECORDS</p><h2 id="recordtitle">本機測試紀錄 <span id="recordCount" style="color:#8799a9;font-size:14px">(0 筆)</span></h2></div><div class="record-actions"><button class="btn btn-outline" type="button" id="exportCsv">匯出 CSV</button><button class="btn btn-outline" type="button" id="clearAll">清除全部紀錄</button></div></div>
+      <div class="table-outer"><table id="recordsTable"><thead><tr><th>分類</th><th>系列</th><th>完整機種</th><th>RAM 配置</th><th>總容量</th><th>換算模式</th><th>Short idle 原始</th><th>Long idle 原始</th><th>S3/Modern 原始</th><th>S5 原始</th><th>Short idle*</th><th>Long idle*</th><th>S3*</th><th>S5*</th><th>加權結果</th><th>加權 SPEC</th><th>判定</th><th>操作</th></tr></thead><tbody id="recordsBody"></tbody></table><div id="emptyState" class="empty">目前尚無本機紀錄。在上方填寫並儲存即可；若更換瀏覽器或裝置，本機紀錄不會同步。</div></div>
+    </section>
+  </main>
+  <footer class="foot">Engineering Data Workspace · GitHub Pages 靜態網頁 · 共用 SPEC 與個人測試紀錄分開管理 · v1.5</footer>
+  <script src="./specs.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const form = $('measureForm');
+      const storageKey = 'engineering-numeric-data-v1'; // 兼容 V1.1 ~ V1.3 紀錄
+      const draftKey = 'engineering-spec-drafts-v1-4';
+      const priorDraftKey = 'engineering-spec-drafts-v1-3';
+      const cfgCategories = ['CEL','Energy Star 9.0'];
+      const cfgSeries = ['V74','V75','V77'];
+      const cfgRams = [8,16,32], cfgCounts = [1,2];
+      const sharedRoot = window.ENGINEERING_SPECS && typeof window.ENGINEERING_SPECS === 'object'
+        ? window.ENGINEERING_SPECS : {items:{}};
+      const sharedSpecs = sharedRoot.items && typeof sharedRoot.items === 'object' && !Array.isArray(sharedRoot.items)
+        ? sharedRoot.items : {};
+      let records = [], drafts = {}, storageAvailable = false;
+      const has = (obj,key) => Object.prototype.hasOwnProperty.call(obj,key);
+      const finiteNonnegative = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+      const safeNumber = n => finiteNonnegative(n) ? n : null;
+      function parsePositiveInput(id) {
+        const raw = $(id).value.trim();
+        if (raw === '') return null;
+        return safeNumber(Number(raw));
+      }
+      function numberFromRecord(n) {
+        // 舊版數值會以 number 存放；null 不視為 0。
+        return n === null || n === undefined || n === '' ? null : safeNumber(Number(n));
+      }
+      function asWeight(spec) {
+        // 相容 V1.3 的 {shortIdle,longIdle,sleep,s5,weighted} 格式，忽略舊四個限值。
+        if (finiteNonnegative(spec)) return spec;
+        if (spec && typeof spec === 'object' && !Array.isArray(spec)) return numberFromRecord(spec.weighted);
+        return null;
+      }
+      function seriesFromModel(value) {
+        const m = /^(V74|V75|V77)/i.exec(String(value||'').trim());
+        return m ? m[1].toUpperCase() : '';
+      }
+      function keyOf(series, category, gb, count) {
+        return cfgSeries.includes(series) && cfgCategories.includes(category)
+          && cfgRams.includes(Number(gb)) && cfgCounts.includes(Number(count))
+          ? `${series}|${category}|${Number(gb)}|${Number(count)}` : '';
+      }
+      function keySelected(){ return keyOf($('series').value,$('category').value,$('ramGb').value,$('ramCount').value); }
+      function keyEditing(){ return keyOf($('editSeries').value,$('editCategory').value,$('editRamGb').value,$('editRamCount').value); }
+      function effectiveSpec(key){
+        if(!key)return {value:null,source:'尚未選擇完整組合'};
+        if (has(drafts,key)) return {value:asWeight(drafts[key]),source:'本機 SPEC 草稿（尚未發布）'};
+        if (has(sharedSpecs,key)) return {value:asWeight(sharedSpecs[key]),source:'網站共用 SPEC'};
+        return {value:null,source:'尚未設定 SPEC'};
+      }
+      function format(n){
+        return finiteNonnegative(n) ? n.toLocaleString('zh-TW',{maximumFractionDigits:6}) : '—';
+      }
+      function displayNum(n,unit){return finiteNonnegative(n)?format(n)+(unit&&unit!=='未指定'?' '+unit:''):'—';}
+      function formatSigned(n){return typeof n === 'number' && Number.isFinite(n) ? (n>=0?'+':'')+n.toLocaleString('zh-TW',{maximumFractionDigits:6}):'—';}
+      function announce(id,msg,kind='info'){$(id).textContent=msg;$(id).dataset.type=kind;}
+      function currentMode(){return form.elements.conversionMode.value === 'manual' ? 'manual':'auto';}
+      function rawFromInputs(){return {shortIdle:parsePositiveInput('shortIdle'),longIdle:parsePositiveInput('longIdle'),sleepValue:parsePositiveInput('sleepValue'),s5:parsePositiveInput('s5')};}
+      function convertedFromRaw(raw){
+        function times12(v){return finiteNonnegative(v)?safeNumber(v*12/1000):null;}
+        return {a:times12(raw.shortIdle),b:times12(raw.longIdle),c:times12(raw.sleepValue),d:times12(raw.s5)};
+      }
+      function manualFromInputs(){return {a:parsePositiveInput('manualShort'),b:parsePositiveInput('manualLong'),c:parsePositiveInput('manualSleep'),d:parsePositiveInput('manualS5')};}
+      function calcTotal(vals){
+        if(![vals.a,vals.b,vals.c,vals.d].every(finiteNonnegative))return null;
+        return safeNumber((vals.a*.2+vals.b*.1+vals.c*.6+vals.d*.1)*8.76);
+      }
+      function valuesNow(){
+        const raw=rawFromInputs(),mode=currentMode();
+        const converted=mode==='manual'?manualFromInputs():convertedFromRaw(raw);
+        return {raw,converted,mode,total:calcTotal(converted)};
+      }
+      function calcRecord(record){
+        const mode=record.conversionMode==='manual'?'manual':'auto';
+        const converted=mode==='manual' && record.manualConverted
+          ? {a:numberFromRecord(record.manualConverted.a),b:numberFromRecord(record.manualConverted.b),c:numberFromRecord(record.manualConverted.c),d:numberFromRecord(record.manualConverted.d)}
+          : convertedFromRaw({shortIdle:numberFromRecord(record.shortIdle),longIdle:numberFromRecord(record.longIdle),sleepValue:numberFromRecord(record.sleepValue),s5:numberFromRecord(record.s5)});
+        return {converted, mode, total:calcTotal(converted)};
+      }
+      function passFail(total,spec){
+        if(!finiteNonnegative(total)||!finiteNonnegative(spec))return 'pending';
+        // 含上限：等於 SPEC 仍 PASS。比較採用未四捨五入的計算值。
+        return total<=spec?'pass':'fail';
+      }
+      function localWrite(key,value){
+        if(!storageAvailable)return false;
+        try{localStorage.setItem(key,JSON.stringify(value));return true;}catch(_){return false;}
+      }
+      try{
+        localStorage.setItem('__calc_probe__','1');localStorage.removeItem('__calc_probe__');
+        storageAvailable=true;
+        const a=JSON.parse(localStorage.getItem(storageKey)||'[]');
+        if(Array.isArray(a))records=a;
+        const newer=localStorage.getItem(draftKey);
+        const existing=JSON.parse(newer===null?(localStorage.getItem(priorDraftKey)||'{}'):newer);
+        if(existing&&typeof existing==='object'&&!Array.isArray(existing)){
+          // 遷移舊 SPEC 草稿，轉成只保留加權上限的格式。
+          for(const [key,item] of Object.entries(existing)){
+            if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
+            const weighted=asWeight(item);
+            if(item===null)drafts[key]=null;
+            else if(finiteNonnegative(weighted))drafts[key]={weighted};
+          }
+          if(newer===null)localWrite(draftKey,drafts);
+        }
+      }catch(error){
+        storageAvailable=false;records=[];drafts={};
+      }
+      function updateModeUi(){
+        const manual=currentMode()==='manual';
+        ['shortIdle','longIdle','sleepValue','s5'].forEach(id=>{$(id).required=!manual;});
+        document.querySelectorAll('.auto-required').forEach(el=>{el.hidden=manual;});
+        [['manualShort','convertedShort'],['manualLong','convertedLong'],['manualSleep','convertedSleep'],['manualS5','convertedS5']].forEach(([inputId,outputId])=>{
+          $(inputId).hidden=!manual;$(inputId).disabled=!manual;$(inputId).required=manual;
+          $(outputId).hidden=manual;
+        });
+        ['labelShort','labelLong','labelSleep','labelS5'].forEach(id=>{$(id).textContent=manual?'自行輸入':'自動換算';});
+        $('conversionHelp').textContent=manual
+          ? '手動模式：直接輸入四個星號欄位，網頁不會覆蓋你的數值；上面的原始量測值可留空。請確認四項的單位一致。'
+          : '自動模式：四項星號值 = 各自原始值 × 12 ÷ 1000。請填齊四個原始量測值。';
+      }
+      function updateComparison(total, specInfo, key){
+        const value=specInfo.value,status=passFail(total,value),gap=finiteNonnegative(total)&&finiteNonnegative(value)?value-total:null;
+        $('comparisonPanel').dataset.status=status;$('sideMatch').dataset.status=status;
+        $('comparisonBadge').textContent=status==='pass'?'✓ PASS':status==='fail'?'✕ FAIL':'尚未判定';
+        $('sideMatchResult').textContent=$('comparisonBadge').textContent;
+        $('comparisonMeasured').textContent=format(total);
+        $('comparisonSpec').textContent=finiteNonnegative(value)?format(value):'未設定';
+        $('comparisonGap').textContent=formatSigned(gap);
+        const reason=!key?'請先選擇機種系列、分類、RAM 容量與條數。'
+          : !finiteNonnegative(value)?'此組尚未設定加權結果 SPEC。請到下方 SPEC 管理儲存草稿，或發布共用 SPEC。'
+          : !finiteNonnegative(total)?'請填齊四個自動換算所需原始值，或切換手動模式輸入四個星號值。'
+          : status==='pass'?'PASS：加權結果小於或等於 SPEC 上限。'
+          :'FAIL：加權結果大於 SPEC 上限。';
+        $('comparisonMessage').textContent=reason+' '+(key?'（SPEC 來源：'+specInfo.source+'）':'');
+        $('sideMatchText').textContent=reason;
+      }
+      function updatePreview(){
+        const data=valuesNow(),raw=data.raw,c=data.converted,unit='mW';
+        const ramGb=parsePositiveInput('ramGb'),ramCount=parsePositiveInput('ramCount');
+        const ram=cfgRams.includes(ramGb)&&cfgCounts.includes(ramCount)?ramGb*ramCount:null;
+        $('ramTotal').textContent=ram===null?'— GB':format(ram)+' GB';
+        $('previewRam').textContent=ram===null?'— GB':format(ram)+' GB';
+        $('previewRamConfig').textContent=ram===null?'等待輸入 RAM 配置':`${ramGb} GB × ${ramCount} 條`;
+        $('previewCategory').textContent=$('category').value||'—';
+        $('previewSeries').textContent=$('series').value||'—';
+        $('previewModel').textContent=$('model').value.trim()||'—';
+        $('previewShort').textContent=displayNum(raw.shortIdle,unit);
+        $('previewLong').textContent=displayNum(raw.longIdle,unit);
+        $('previewModeLabel').textContent='S3或Modern Standby';
+        $('previewSleep').textContent=displayNum(raw.sleepValue,unit);
+        $('previewS5').textContent=displayNum(raw.s5,unit);
+        $('convertedShort').textContent=format(c.a);
+        $('convertedLong').textContent=format(c.b);
+        $('convertedSleep').textContent=format(c.c);
+        $('convertedS5').textContent=format(c.d);
+        document.querySelectorAll('[data-converted-unit]').forEach(el=>{el.textContent='';});
+        $('weightedResult').textContent=format(data.total);
+        $('previewWeighted').textContent=format(data.total);
+        $('resultStatus').textContent=data.total===null?'請填齊四個'+(data.mode==='manual'?'手動換算值':'原始量測值'):'依指定換算及加權公式計算';
+        $('previewWeightedUnit').textContent=data.total===null?'待輸入數值':'可與對應 SPEC 上限比較';
+        const key=keySelected(),specInfo=effectiveSpec(key);
+        $('specMatch').textContent=key?key.replace(/\|/g,' · '):'請選擇系列、分類、RAM 容量與條數。';
+        $('previewSpecWeighted').textContent=finiteNonnegative(specInfo.value)?format(specInfo.value):'未設定';
+        $('previewSpecSource').textContent='SPEC 來源：'+specInfo.source+'。一般訪客無法修改網站已發布的 SPEC。';
+        updateComparison(data.total,specInfo,key);
+      }
+      function cell(tr,value,emph=false){
+        const td=document.createElement('td');
+        if(emph){const b=document.createElement('strong');b.textContent=String(value);td.appendChild(b);}
+        else td.textContent=String(value);
+        tr.appendChild(td);return td;
+      }
+      function recordView(record){
+        const calc=calcRecord(record),key=keyOf(record.series||seriesFromModel(record.model),record.category,record.ramGb,record.ramCount),spec=effectiveSpec(key).value;
+        const status=passFail(calc.total,spec);
+        return {calc,key,spec,status};
+      }
+      function renderRecords(){
+        $('recordsBody').replaceChildren();
+        $('recordCount').textContent=`(${records.length} 筆)`;
+        $('recordsTable').hidden=records.length===0;$('emptyState').hidden=records.length!==0;
+        $('clearAll').disabled=records.length===0;$('exportCsv').disabled=records.length===0;
+        records.forEach((r,index)=>{
+          const tr=document.createElement('tr'),view=recordView(r),c=view.calc.converted;
+          cell(tr,r.category||'未分類');cell(tr,r.series||seriesFromModel(r.model)||'—');cell(tr,r.model||'—',true);
+          cell(tr,`${r.ramGb||'—'} GB × ${r.ramCount||'—'} 條`);
+          const gb=Number(r.ramGb),cnt=Number(r.ramCount);cell(tr,cfgRams.includes(gb)&&cfgCounts.includes(cnt)?gb*cnt+' GB':'—');
+          cell(tr,view.calc.mode==='manual'?'手動填寫':'自動換算');
+          [r.shortIdle,r.longIdle,r.sleepValue,r.s5].forEach(v=>cell(tr,displayNum(numberFromRecord(v),r.unit)));
+          [c.a,c.b,c.c,c.d].forEach(v=>cell(tr,format(v)));
+          cell(tr,format(view.calc.total),true);cell(tr,format(view.spec));cell(tr,view.status==='pending'?'未判定':view.status.toUpperCase(),true);
+          const td=cell(tr,'');const b=document.createElement('button');b.type='button';b.className='btn-danger';b.textContent='刪除';
+          b.addEventListener('click',()=>{
+            if(!confirm('確定刪除「'+String(r.model||'未命名')+'」這筆紀錄？'))return;
+            records.splice(index,1);localWrite(storageKey,records);renderRecords();announce('notice','已刪除一筆紀錄。','success');
+          });td.appendChild(b);$('recordsBody').appendChild(tr);
+        });
+      }
+      function refreshAll(){updatePreview();renderRecords();}
+      form.addEventListener('input',e=>{
+        if(e.target.id==='model'){const series=seriesFromModel($('model').value);if(series)$('series').value=series;}
+        updatePreview();
+      });
+      form.addEventListener('change',()=>{updateModeUi();updatePreview();});
+      form.addEventListener('reset',()=>{
+        announce('notice','');
+        setTimeout(()=>{updateModeUi();updatePreview();},0);
+      });
+      form.addEventListener('submit',e=>{
+        e.preventDefault();updateModeUi();if(!form.reportValidity())return;
+        const now=valuesNow();
+        const item={category:$('category').value,series:$('series').value,model:$('model').value.trim(),ramGb:parsePositiveInput('ramGb'),ramCount:parsePositiveInput('ramCount'),unit:'mW',
+          sleepMode:'S3或Modern Standby',...now.raw,conversionMode:now.mode};
+        if(now.mode==='manual')item.manualConverted={...now.converted};
+        if(!keyOf(item.series,item.category,item.ramGb,item.ramCount)||!item.model||!finiteNonnegative(now.total)){
+          announce('notice','請檢查機種、RAM 與四個換算值，必須都是有效的非負數。','error');return;
+        }
+        records.unshift(item);const ok=localWrite(storageKey,records);
+        renderRecords();form.reset();setTimeout(()=>{updateModeUi();updatePreview();},0);
+        announce('notice',ok?'紀錄已儲存於目前瀏覽器。PASS／FAIL 依目前的 SPEC 上限計算。':'已加到畫面，但無法保存於瀏覽器；請立刻匯出 CSV。',ok?'success':'error');
+      });
+      function loadEditor(){
+        const key=keyEditing(),raw=has(drafts,key)?drafts[key]:sharedSpecs[key];
+        const weighted=asWeight(raw);
+        $('editWeighted').value=finiteNonnegative(weighted)?String(weighted):'';
+        const source=has(drafts,key)?'本機草稿':has(sharedSpecs,key)?'網站共用版':'尚未設定';
+        $('editStatus').textContent=`正在編輯：${key.replace(/\|/g,' / ')}（目前來源：${source}）`;
+        announce('specNotice','');
+      }
+      ['editSeries','editCategory','editRamGb','editRamCount'].forEach(id=>$(id).addEventListener('change',loadEditor));
+      $('resetSpecInputs').addEventListener('click',loadEditor);
+      $('saveSpecDraft').addEventListener('click',()=>{
+        const key=keyEditing(),raw=$('editWeighted').value.trim();
+        if(!key)return;
+        const val=raw===''?null:parsePositiveInput('editWeighted');
+        if(raw!==''&&!finiteNonnegative(val)){
+          announce('specNotice','請輸入大於或等於 0 的有效 SPEC，或留空代表移除此組 SPEC。','error');return;
+        }
+        drafts[key]=val===null?null:{weighted:val};
+        const ok=localWrite(draftKey,drafts);
+        loadEditor();refreshAll();
+        announce('specNotice',ok?'已儲存本機 SPEC 草稿，本機 PASS／FAIL 立即依此數值判斷。要讓所有人共用，還需要匯出並發布 specs.js。':'本機儲存不可用，這次變更只會暫存於目前頁面。',ok?'success':'error');
+      });
+      function mergeSpecs(){
+        const merged={};
+        for(const [key,spec] of Object.entries(sharedSpecs)){
+          if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
+          const value=asWeight(spec);if(finiteNonnegative(value))merged[key]={weighted:value};
+        }
+        for(const [key,spec] of Object.entries(drafts)){
+          if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
+          const value=asWeight(spec);
+          if(finiteNonnegative(value))merged[key]={weighted:value};else delete merged[key];
+        }
+        return merged;
+      }
+      function download(text,mime,filename){
+        const blob=new Blob([text],{type:mime}),url=URL.createObjectURL(blob),link=document.createElement('a');
+        link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }
+      $('exportSpecJs').addEventListener('click',()=>{
+        const obj={schemaVersion:2,updatedAt:new Date().toISOString(),items:mergeSpecs()};
+        const content='// 工程數值計算工具 V1.5 — 網站共用加權結果 SPEC，更新須經 GitHub 發布。\nwindow.ENGINEERING_SPECS = '+JSON.stringify(obj,null,2)+';\n';
+        download(content,'text/javascript;charset=utf-8','specs.js');
+        announce('specNotice','已下載 specs.js；請上傳並提交到 GitHub 原網站，其他人的手機與電腦才會更新。','success');
+      });
+      $('clearDrafts').addEventListener('click',()=>{
+        if(!confirm('確定清除這台裝置的全部 SPEC 草稿？網站共用 SPEC 不受影響。'))return;
+        drafts={};localWrite(draftKey,drafts);loadEditor();refreshAll();
+        announce('specNotice','本機草稿已清除，改用網站共用 SPEC 判斷。','success');
+      });
+      function safeCsv(val){
+        let s=String(val??'');
+        if(typeof val==='string'&&/^[\s]*[=+@-]/.test(s))s="'"+s;
+        return '"'+s.replace(/"/g,'""')+'"';
+      }
+      $('exportCsv').addEventListener('click',()=>{
+        if(!records.length)return;
+        const header=['測試分類','機種系列','完整機種名稱','單條RAM(GB)','RAM條數','總RAM(GB)','原始單位','換算模式','Short idle原始','Long idle原始','S3或Modern Standby原始','S5原始','Short idle*','Long idle*','S3*','S5*','加權結果','加權SPEC(KW/Hr)','判定'];
+        const rows=records.map(r=>{
+          const v=recordView(r),c=v.calc.converted;
+          return [r.category||'未分類',r.series||seriesFromModel(r.model),r.model,r.ramGb,r.ramCount,Number(r.ramGb)*Number(r.ramCount),r.unit,v.calc.mode==='manual'?'手動填寫':'自動換算',r.shortIdle??'',r.longIdle??'',r.sleepValue??'',r.s5??'',c.a??'',c.b??'',c.c??'',c.d??'',v.calc.total??'',v.spec??'',v.status==='pending'?'未判定':v.status.toUpperCase()];
+        });
+        const csv='\ufeff'+[header,...rows].map(row=>row.map(safeCsv).join(',')).join('\r\n');
+        download(csv,'text/csv;charset=utf-8','engineering_calculator_v1-5.csv');
+        announce('notice','已匯出 CSV，包含換算模式、加權 SPEC 與 PASS／FAIL（按目前可見的 SPEC 判定）。','success');
+      });
+      $('clearAll').addEventListener('click',()=>{
+        if(!records.length||!confirm(`確定刪除全部 ${records.length} 筆本機紀錄？建議先匯出 CSV。`))return;
+        records=[];localWrite(storageKey,records);renderRecords();
+        announce('notice','本機測試紀錄已清除。','success');
+      });
+      updateModeUi();loadEditor();refreshAll();
+      if(!storageAvailable)announce('notice','目前瀏覽器無法使用本機儲存；仍可計算，但記錄及 SPEC 草稿關閉後可能遺失。','error');
+      if(!window.ENGINEERING_SPECS)announce('specNotice','未載入 specs.js。請確認 index.html 與 specs.js 位於同一資料夾或同一網站目錄。','error');
+    })();
+
+  </script>
+</body>
+</html>
