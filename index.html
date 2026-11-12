@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#142b45">
   <meta name="description" content="CEL、Energy Star 9.0 電源測試數值換算、加權計算與共用 SPEC 查閱工具">
-  <title>工程數值計算工具 V1.6｜登入</title>
+  <title>工程數值計算工具 V1.9｜登入</title>
   <style>
     :root{font-family:Inter,"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;color:#193048;background:#f3f6fa;font-synthesis:none}
     *{box-sizing:border-box}body{margin:0;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}a{color:#0b857a}
@@ -113,10 +113,47 @@
     .logout-button:hover{background:#376480}
     .topbar-controls{display:flex;gap:11px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
     @media(max-width:550px){.login-card{padding:28px 21px}.topbar-controls{align-items:flex-end;flex-direction:column}.version{font-size:11px}.logout-button{padding:10px 12px}}
+
+    /* V1.8: 設計者名稱及 SPEC 後端授權編輯 */
+    .designer-name{font-size:14px;font-weight:850;color:#a4e8db;letter-spacing:.04em;margin:4px 0 10px}
+    .admin-panel{padding:17px;border:1px solid #bfded5;background:#f3faf7;border-radius:11px;margin-bottom:18px}
+    .admin-row{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin-top:13px}
+    .admin-row .field{flex:1 1 220px;min-width:0}.admin-row .btn{min-height:44px}
+    #specWriteArea[hidden]{display:none!important}
+    #specSyncStatus[data-state=online]{background:#ecf9f2;border-color:#aad7bf;color:#175e45}
+    #specSyncStatus[data-state=error]{background:#fff4eb;border-color:#ebc5a3;color:#845026}
+    @media(max-width:550px){.admin-row .btn{flex:1}}
+
+    /* V1.7: 頁尾可展開版本紀錄，預設收合。 */
+    .version-history{margin-top:22px;overflow:hidden}
+    .version-history details{margin:0}
+    .version-history summary{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:21px 24px;list-style:none;cursor:pointer;color:#21394c;user-select:none}
+    .version-history summary::-webkit-details-marker{display:none}
+    .version-history summary:focus-visible{outline:3px solid #21a899;outline-offset:-4px}
+    .history-summary-main{display:flex;align-items:center;gap:14px}
+    .history-icon{display:inline-flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:13px;background:#e7f7f3;color:#08786f;font-size:26px;font-weight:850}
+    .history-heading{display:block;font-size:18px;font-weight:850;line-height:1.4}
+    .history-subheading{display:block;color:#718497;font-size:12px;font-weight:500;margin-top:4px;line-height:1.45}
+    .history-expand-label{white-space:nowrap;color:#147d72;font-size:12px;font-weight:750}
+    .history-arrow{display:inline-block;font-size:20px;margin-left:6px;transition:transform .2s}
+    .version-history details[open] .history-arrow{transform:rotate(180deg)}
+    .history-body{border-top:1px solid #e3ecf1;padding:20px 25px 25px}
+    .history-intro{font-size:12px;color:#61788d;line-height:1.8;margin:0 0 17px}
+    .history-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    .history-entry{display:grid;grid-template-columns:72px 1fr;gap:14px;padding:15px;border:1px solid #e3edf2;border-radius:11px;background:#fafcfd}
+    .history-entry.is-current{background:#eef9f5;border-color:#b8dfd1}
+    .history-version{font-weight:900;font-size:14px;color:#0a8176;padding-top:3px}
+    .history-entry h3{margin:0 0 5px;font-size:14px;line-height:1.5;color:#243e53}
+    .history-entry p{font-size:12px;color:#526b7d;line-height:1.85;margin:0}
+    .history-note{font-size:12px;color:#725b37;background:#fff7e9;border:1px solid #eddaad;border-radius:10px;padding:12px 14px;margin-top:17px;line-height:1.8}
+    .js-warning{background:#fff3db;border-bottom:1px solid #e5d09c;color:#634c22;padding:12px 18px;text-align:center;font-size:13px;font-weight:700}
+    @media(max-width:550px){.version-history summary{padding:17px 15px;align-items:flex-start}.history-expand-label{margin-top:6px}.history-body{padding:17px 14px}.history-entry{grid-template-columns:1fr;gap:4px;padding:13px}.history-summary-main{gap:10px}.history-heading{font-size:16px}.history-icon{width:38px;height:38px}.history-expand-label{font-size:11px}}
+
   </style>
 </head>
 <body>
-  <!-- V1.6：僅用來隱藏一般使用者介面，並非真正的伺服器端驗證。 -->
+  <noscript><div class="js-warning">此網頁需要 JavaScript 才能登入與計算，請在瀏覽器設定中啟用 JavaScript。</div></noscript>
+  <!-- V1.7：僅用來隱藏一般使用者介面，並非真正的伺服器端驗證。 -->
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
     <div class="login-card">
       <div class="login-mark" aria-hidden="true">∑</div>
@@ -131,16 +168,17 @@
         <div class="login-error" id="loginError" role="alert" aria-live="polite"></div>
       </form>
       <p class="login-caution">這是簡易網頁入口，不等於資料加密或真正的身分驗證。請勿在公開的 GitHub 網站儲存個資或機密 SPEC。</p>
+      <p class="login-caution" style="border-top:0;margin-top:6px;padding-top:0">如無法進入網頁，請確認使用的是正式 GitHub Pages 網址，並嘗試強制重新整理或無痕模式；若出現 404，請檢查 GitHub Settings → Pages。</p>
     </div>
   </section>
   <div id="appRoot" class="protected-app" hidden>
 
   <header class="topbar"><div class="topbar-inner">
-    <div><p class="eyebrow">ENGINEERING DATA WORKSPACE</p><h1>工程數值計算工具</h1><p class="tagline">CEL / Energy Star 9.0 · 電源換算 · 加權計算 · V74 / V75 / V77 SPEC</p></div>
-    <div class="topbar-controls"><span class="version">v1.6</span><button type="button" id="logoutButton" class="logout-button">登出</button></div>
+    <div><p class="eyebrow">ENGINEERING DATA WORKSPACE</p><h1>工程數值計算工具</h1><p class="designer-name">設計者：RD411-Evan Wu</p><p class="tagline">CEL / Energy Star 9.0 · 電源換算 · 加權計算 · 14／15／17 吋 SPEC</p></div>
+    <div class="topbar-controls"><span class="version">v1.9</span><button type="button" id="logoutButton" class="logout-button">登出</button></div>
   </div></header>
   <main>
-    <p class="intro">量測值與計算都在你的瀏覽器中處理。網站正式 SPEC 由檔案管理，不需要雲端資料庫；本機編輯草稿只影響目前瀏覽器，發布後所有裝置才會讀到同一份正式 SPEC。</p>
+    <p class="intro">量測值與測試紀錄仍存於個人瀏覽器。SPEC 可選擇 GitHub 檔案或 Google 試算表：GitHub 模式需由有權限的人提交更新；Google 模式則可在獨立管理頁輸入管理密碼後修改，其他裝置自動同步。</p>
     <div class="layout">
       <section class="card content" aria-labelledby="formtitle">
         <div class="section-header"><p class="kicker">01 / TEST INPUT</p><h2 id="formtitle">新增測試資料</h2><p class="desc">選擇機種系列、分類與 RAM 組態，輸入量測值或手動填寫換算值，立即顯示加權結果與 SPEC 的 PASS／FAIL 判定。</p></div>
@@ -148,8 +186,8 @@
           <p class="section-title"><span class="index">1</span> 基本資料</p>
           <div class="fields">
             <div class="field"><label for="category">測試分類 <span class="req">*</span></label><select id="category" name="category" required><option value="">請選擇分類</option><option>CEL</option><option>Energy Star 9.0</option></select></div>
-            <div class="field"><label for="series">機種系列（SPEC） <span class="req">*</span></label><select id="series" name="series" required><option value="">請選擇系列</option><option>V74</option><option>V75</option><option>V77</option></select></div>
-            <div class="field full"><label for="model">完整機種名稱 <span class="req">*</span></label><input id="model" name="model" placeholder="例如：V74AU4" maxlength="100" autocomplete="off" required><p class="help">輸入 V74 / V75 / V77 開頭的名稱，會自動帶入對應系列，也可自行變更。</p></div>
+            <div class="field"><label for="series">機種系列（SPEC） <span class="req">*</span></label><select id="series" name="series" required><option value="">請選擇系列</option><option>14吋</option><option>15吋</option><option>17吋</option></select></div>
+            <div class="field full"><label for="model">完整機種名稱 <span class="req">*</span></label><input id="model" name="model" placeholder="例如：V74AU4" maxlength="100" autocomplete="off" required><p class="help">輸入 V74／V75／V77 開頭的機種名稱，會自動對應 14／15／17 吋；也可自行選擇。</p></div>
             <div class="field"><label for="ramGb">單條 RAM 容量（GB） <span class="req">*</span></label><select id="ramGb" required><option value="">請選擇</option><option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option></select></div>
             <div class="field"><label for="ramCount">RAM 數量（條） <span class="req">*</span></label><select id="ramCount" required><option value="">請選擇</option><option value="1">1 條</option><option value="2">2 條</option></select></div>
             <div class="field full"><label>RAM 總容量</label><div class="readout" id="ramTotal">— GB</div></div>
@@ -195,7 +233,7 @@
         </form>
       </section>
       <aside class="card side" aria-labelledby="previewtitle">
-        <p class="kicker">02 / LIVE PREVIEW</p><h2 id="previewtitle">測試摘要</h2><p class="desc">數值及對應 SPEC 隨選擇更新。本機有 SPEC 草稿時，先以草稿判定。</p>
+        <p class="kicker">02 / LIVE PREVIEW</p><h2 id="previewtitle">測試摘要</h2><p class="desc">數值及對應 SPEC 隨選擇更新；使用 Google 試算表模式時，每 30 秒自動同步；GitHub 模式以已發布的 specs.js 為準。</p>
         <div class="stats"><p>RAM 總容量</p><strong id="previewRam">— GB</strong><p id="previewRamConfig">等待輸入 RAM 配置</p></div>
         <div style="margin-top:13px">
           <div class="mini-line"><span>測試分類</span><strong id="previewCategory">—</strong></div>
@@ -209,35 +247,23 @@
         <div class="side-total"><p>最終加權結果</p><strong id="previewWeighted">—</strong><small id="previewWeightedUnit">待輸入數值</small></div>
         <div class="spec-preview" aria-labelledby="specpreviewtitle"><p class="kicker">03 / SPEC LIMIT</p><h3 id="specpreviewtitle">對應的加權 SPEC</h3><p class="spec-note" id="specMatch">請選擇系列、分類、RAM 容量與條數。</p>
           <div class="spec-row"><span>加權結果 SPEC 上限（KW/Hr）</span><strong id="previewSpecWeighted">—</strong></div>
-          <p class="help" id="previewSpecSource">採用網站已發布的共用 SPEC；如果本機有草稿，會優先用草稿進行本機比較。</p>
+          <p class="help" id="previewSpecSource">依設定使用 Google 試算表的共用 SPEC，或 GitHub 已發布的 specs.js。</p>
           <div class="sidematch" data-status="pending" id="sideMatch"><span class="help">加權判定</span><strong id="sideMatchResult" role="status" aria-live="polite">未判定</strong><span id="sideMatchText" class="help">SPEC 尚未設定或數值未填完整</span></div>
         </div>
       </aside>
     </div>
     <section class="card spec-manager" id="spec-manager" aria-labelledby="specmanagertitle">
-      <div class="record-head"><div><p class="kicker">04 / SPEC CONFIGURATION</p><h2 id="specmanagertitle">V74 / V75 / V77 SPEC 管理</h2><p class="desc">兩種分類 × 三種 RAM 容量 × 兩種 RAM 數量 × 三個系列，共有 36 組獨立的加權結果 SPEC。</p></div></div>
+      <div class="record-head"><div><p class="kicker">04 / SPEC CONFIGURATION</p><h2 id="specmanagertitle">14吋 / 15吋 / 17吋 SPEC 管理</h2><p class="desc">兩種分類 × 三種 RAM 容量 × 兩種 RAM 數量 × 三個系列，共有 36 組獨立的加權結果 SPEC。</p></div></div>
       <div class="manager-inner">
-        <div class="manager-callout"><strong>共用 SPEC 不會因其他人輸入測試值而改變。</strong>你可以在下方編輯並保存「本機草稿」，但<strong>只有把產生的 specs.js 上傳到 GitHub 網站專案</strong>，新 SPEC 才會同步給不同裝置的使用者。一般訪客無法直接修改網站的共用 SPEC；GitHub 寫入權限才是正式發布的控制。這個管理區不是密碼保護功能。</div>
-        <details id="specEditorDetails"><summary>展開 SPEC 編輯／更新（本機草稿）</summary>
+        <div class="manager-callout" id="specSyncStatus" role="status" aria-live="polite">正在確認共用 SPEC 來源…</div>
+        <div class="manager-actions" style="margin:0 0 10px"><button type="button" class="btn btn-outline" id="refreshSpecs">立即同步 SPEC</button><span class="status-line" id="lastSync">等待載入…</span></div>
+        <details id="specEditorDetails"><summary>展開 SPEC 編輯／更新（管理者專區）</summary>
           <div class="manager-form">
-            <p class="manager-subtitle" style="margin-top:0">選擇要設定的 SPEC 組合</p>
-            <div class="manager-grid">
-              <div class="field"><label for="editSeries">系列</label><select id="editSeries"><option>V74</option><option>V75</option><option>V77</option></select></div>
-              <div class="field"><label for="editCategory">分類</label><select id="editCategory"><option>CEL</option><option>Energy Star 9.0</option></select></div>
-              <div class="field"><label for="editRamGb">單條 RAM</label><select id="editRamGb"><option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option></select></div>
-              <div class="field"><label for="editRamCount">RAM 數量</label><select id="editRamCount"><option value="1">1 條</option><option value="2">2 條</option></select></div>
-            </div>
-            <p id="editStatus" class="status-line">載入組合中…</p>
-            <p class="manager-subtitle">輸入加權結果 SPEC 上限</p>
-            <div class="manager-values single-spec">
-              <div class="field"><label for="editWeighted">加權結果 SPEC（KW/Hr）</label><input id="editWeighted" type="number" min="0" step="any" placeholder="例如 30"></div>
-            </div>
-            <p class="help">每組只需設定一個加權結果 SPEC。計算結果 ≤ SPEC 為 PASS，超過為 FAIL。留空代表未設定（儲存後會移除這組草稿）。</p>
-            <p class="unit-caution">單位提醒：此欄依需求顯示「KW/Hr」。若實際代表每年耗電量，標準寫法應為「kWh／年」；更改標示不會改動計算公式。</p>
-            <div class="manager-actions"><button type="button" id="saveSpecDraft" class="btn btn-primary">儲存此組 SPEC 到本機草稿</button><button type="button" id="resetSpecInputs" class="btn btn-outline">重新載入這組</button></div>
+            <p class="manager-subtitle" style="margin-top:0">SPEC 修改方式</p>
+            <p class="desc" id="specEditHelp">若採 Google 試算表模式，按下面的按鈕前往 Google 管理頁，以管理密碼授權後編輯 36 組 SPEC。若採 GitHub 模式，須使用有 Repository 寫入權限的 GitHub 帳號編輯 specs.js，提交後其他人會讀取新版。</p>
+            <div class="manager-actions"><button type="button" id="openSpecEditor" class="btn btn-primary">開啟 SPEC 管理頁</button></div>
             <p id="specNotice" class="notice" role="status" aria-live="polite"></p>
-            <div class="manager-bottom"><div><p class="manager-subtitle" style="margin-top:0">讓所有人看到相同 SPEC</p><p class="desc">下載 specs.js，替換 GitHub 專案內的同名檔案並提交更新。</p></div><button class="btn btn-outline" type="button" id="exportSpecJs">下載含草稿的 specs.js</button></div>
-            <div class="manager-actions"><button class="btn btn-outline" type="button" id="clearDrafts">清除本機 SPEC 草稿（不影響已發布 SPEC）</button></div>
+            <p class="unit-caution">SPEC 單位沿用「KW/Hr」顯示。若實際代表年度耗電量，標準寫法為「kWh／年」。請勿將個資或公司機密寫入公開的 specs.js 或 Google 公開讀取端點。</p>
           </div>
         </details>
       </div>
@@ -246,13 +272,39 @@
       <div class="record-head"><div><p class="kicker">05 / LOCAL RECORDS</p><h2 id="recordtitle">本機測試紀錄 <span id="recordCount" style="color:#8799a9;font-size:14px">(0 筆)</span></h2></div><div class="record-actions"><button class="btn btn-outline" type="button" id="exportCsv">匯出 CSV</button><button class="btn btn-outline" type="button" id="clearAll">清除全部紀錄</button></div></div>
       <div class="table-outer"><table id="recordsTable"><thead><tr><th>分類</th><th>系列</th><th>完整機種</th><th>RAM 配置</th><th>總容量</th><th>換算模式</th><th>Short idle 原始</th><th>Long idle 原始</th><th>S3/Modern 原始</th><th>S5 原始</th><th>Short idle*</th><th>Long idle*</th><th>S3*</th><th>S5*</th><th>加權結果</th><th>加權 SPEC</th><th>判定</th><th>操作</th></tr></thead><tbody id="recordsBody"></tbody></table><div id="emptyState" class="empty">目前尚無本機紀錄。在上方填寫並儲存即可；若更換瀏覽器或裝置，本機紀錄不會同步。</div></div>
     </section>
+
+    <!-- V1.9: 保留可收合的版本更新紀錄。 -->
+    <section class="card version-history" aria-labelledby="historyHeading">
+      <details id="versionHistory">
+        <summary>
+          <span class="history-summary-main"><span class="history-icon" aria-hidden="true">↻</span><span><span id="historyHeading" class="history-heading">版本更新紀錄</span><span class="history-subheading">V1.1 ～ V1.9｜查看歷次修改內容</span></span></span>
+          <span class="history-expand-label" aria-hidden="true">展開／收合 <span class="history-arrow">⌄</span></span>
+        </summary>
+        <div class="history-body">
+          <p class="history-intro">以下記錄各版新增或調整的功能。計算及判定均使用目前 V1.9 的規則，不會依舊版公式重新切換。</p>
+          <ol class="history-list">
+            <li class="history-entry"><span class="history-version">V1.1</span><div><h3>手機、電腦與資料紀錄</h3><p>建立響應式網頁，加入機種名稱、RAM 容量與數量、Short idle／Long idle／待機／S5 欄位；支援本機儲存、CSV 匯出，提供 GitHub Pages 發布說明。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.2</span><div><h3>測試分類及第一版加權公式</h3><p>新增 CEL、Energy Star 9.0；RAM 限制為 8／16／32 GB、1／2 條。新增四項換算（當時為「原始值 ÷ 12 × 1000」）與加權計算，當時以 AAA／BBB／CCC／DDD 命名。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.3</span><div><h3>修訂換算公式、建立 SPEC 管理</h3><p>將 AAA／BBB／CCC／DDD 改名為 Short idle*／Long idle*／S3*／S5*，公式改為「原始值 × 12 ÷ 1000」；新增 V74／V75／V77、分類及 RAM 組態對應的 36 組 SPEC，分離本機草稿與網站正式共用 SPEC。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.4</span><div><h3>PASS／FAIL 與自動／手動換算</h3><p>待機欄位統一為「S3或Modern Standby」；SPEC 每組只填加權結果上限。結果 ≤ SPEC 顯示 PASS，超過顯示 FAIL，缺少值則未判定；星號換算可切換自動或手動輸入。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.5</span><div><h3>固定 mW、介面放大與手機優化</h3><p>原始量測值固定顯示 mW，SPEC 標示依需求顯示 KW/Hr；放大 PASS／FAIL 判定、統一原始輸入與換算欄位尺寸，改善手機單欄操作與 GitHub Pages 發布流程。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.6</span><div><h3>簡易帳號密碼登入</h3><p>新增登入表單、帳密錯誤提示、工作階段記憶與登出按鈕；原有計算、SPEC 與紀錄功能維持不變。登入只在前端檢查，不具有真正的資料存取保護。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.7</span><div><h3>版本紀錄與使用排查資訊</h3><p>在頁面最下方新增預設收合的 V1.1～V1.7 更新紀錄；增加 GitHub Pages 網站開啟問題的排查說明及頁面載入提示，保留 V1.6 登入與所有計算功能。</p></div></li>
+            <li class="history-entry"><span class="history-version">V1.8</span><div><h3>設計者、尺寸分類與授權共用 SPEC</h3><p>頁首新增「RD411-Evan Wu」；機種系列由 V74／V75／V77 改為 14／15／17 吋，保留機種名稱自動判斷及舊版紀錄相容。SPEC 改用管理密碼授權後寫入 Cloudflare D1 共用資料庫；其他使用者每 30 秒及重新開啟頁面時同步讀取。不再依賴個人草稿更新正式 SPEC。</p></div></li>
+            <li class="history-entry is-current"><span class="history-version">V1.9</span><div><h3>免 Cloudflare：GitHub 或 Google 試算表共用 SPEC</h3><p>提供兩種使用模式：只用 GitHub 時由有寫入權限者編輯 specs.js，發布後其他人可讀取；Google 試算表模式則以 Apps Script 管理頁和伺服器端管理密碼更新共用 SPEC，計算網頁定期讀取資料。保留 14／15／17 吋、36 組 SPEC、換算、加權、PASS／FAIL、CSV 與登入畫面。</p></div></li>
+          </ol>
+          <div class="history-note"><strong>資料安全提醒：</strong>一般登入仍只是 HTML／JavaScript 畫面限制，無法保護公開網站。Google 模式的管理密碼於 Apps Script 伺服器驗證，但 SPEC 讀取端點仍公開；請勿存放個資或機密 SPEC。</div>
+        </div>
+      </details>
+    </section>
   </main>
-  <footer class="foot">Engineering Data Workspace · GitHub Pages 靜態網頁 · 共用 SPEC 與個人測試紀錄分開管理 · v1.6</footer>
+  <footer class="foot">Engineering Data Workspace · GitHub Pages + Google Sheets／GitHub SPEC · 個人測試紀錄保存在本機 · v1.9</footer>
   </div><!-- /appRoot -->
   <script>
     (() => {
       'use strict';
       // 僅示範前端帳密檢查：公開 HTML 可被檢視及繞過，切勿用於機密資料保護。
+      // 帳號登入仍是 V1.6 的示範級前端遮罩，並非真正的存取控管。
       const DEMO_ACCOUNT = 'RD411';
       const DEMO_PASSWORD = '123456';
       const SESSION_KEY = 'engineering-calculator-v1-6-demo-signed-in';
@@ -297,27 +349,30 @@
         password.type = 'password';
         error.textContent = '';
         switchView(false);
+        document.dispatchEvent(new Event('calculator:logout'));
       });
       switchView(hasSession());
     })();
   </script>
   <script src="./specs.js"></script>
+  <script src="./spec-config.js"></script>
   <script>
     (() => {
       'use strict';
       const $ = id => document.getElementById(id);
       const form = $('measureForm');
       const storageKey = 'engineering-numeric-data-v1'; // 兼容 V1.1 ~ V1.3 紀錄
-      const draftKey = 'engineering-spec-drafts-v1-4';
-      const priorDraftKey = 'engineering-spec-drafts-v1-3';
+      // V1.9：GitHub 模式無須 API，Google 模式經唯讀 JSONP 取得最新 SPEC。
+      // JSONP 僅可公開非敏感資訊；管理更新透過 Apps Script 伺服器授權。
+      const sharedRoot = window.ENGINEERING_SPECS && typeof window.ENGINEERING_SPECS === 'object' ? window.ENGINEERING_SPECS : {items:{}};
+      const GOOGLE_URL = String(window.ENGINEERING_GOOGLE_WEB_APP_URL || '').trim();
+      const GOOGLE_MODE = GOOGLE_URL !== '';
+      const EDIT_REPO_URL = 'https://github.com/david890229/engineering-calculator/edit/main/specs.js';
+      let legacySpecs = {}, remoteSpecs = {}, backendState = GOOGLE_MODE ? 'unconfigured' : 'connected', records = [], storageAvailable = false;
+      let latestUpdatedAt = null, jsonpSequence=0;
       const cfgCategories = ['CEL','Energy Star 9.0'];
-      const cfgSeries = ['V74','V75','V77'];
+      const cfgSeries = ['14吋','15吋','17吋'];
       const cfgRams = [8,16,32], cfgCounts = [1,2];
-      const sharedRoot = window.ENGINEERING_SPECS && typeof window.ENGINEERING_SPECS === 'object'
-        ? window.ENGINEERING_SPECS : {items:{}};
-      const sharedSpecs = sharedRoot.items && typeof sharedRoot.items === 'object' && !Array.isArray(sharedRoot.items)
-        ? sharedRoot.items : {};
-      let records = [], drafts = {}, storageAvailable = false;
       const has = (obj,key) => Object.prototype.hasOwnProperty.call(obj,key);
       const finiteNonnegative = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
       const safeNumber = n => finiteNonnegative(n) ? n : null;
@@ -326,33 +381,38 @@
         if (raw === '') return null;
         return safeNumber(Number(raw));
       }
-      function numberFromRecord(n) {
-        // 舊版數值會以 number 存放；null 不視為 0。
-        return n === null || n === undefined || n === '' ? null : safeNumber(Number(n));
-      }
+      function numberFromRecord(n) {return n === null || n === undefined || n === '' ? null : safeNumber(Number(n));}
       function asWeight(spec) {
-        // 相容 V1.3 的 {shortIdle,longIdle,sleep,s5,weighted} 格式，忽略舊四個限值。
         if (finiteNonnegative(spec)) return spec;
         if (spec && typeof spec === 'object' && !Array.isArray(spec)) return numberFromRecord(spec.weighted);
         return null;
       }
-      function seriesFromModel(value) {
-        const m = /^(V74|V75|V77)/i.exec(String(value||'').trim());
-        return m ? m[1].toUpperCase() : '';
+      const toNewSeries = s => ({V74:'14吋', V75:'15吋', V77:'17吋'})[String(s)] || String(s||'');
+      function ingestLegacySpecs(root){
+        const obj = root && typeof root.items === 'object' && root.items && !Array.isArray(root.items) ? root.items : {};
+        const next={};
+        for(const [oldKey,val] of Object.entries(obj)){
+          const p=oldKey.split('|'); if(p.length!==4)continue;
+          const k=keyOf(toNewSeries(p[0]),p[1],p[2],p[3]);
+          if(k && finiteNonnegative(asWeight(val))) next[k] = {weighted:asWeight(val)};
+        }
+        legacySpecs=next;
       }
-      function keyOf(series, category, gb, count) {
-        return cfgSeries.includes(series) && cfgCategories.includes(category)
-          && cfgRams.includes(Number(gb)) && cfgCounts.includes(Number(count))
+      function seriesFromModel(value){const m=/^(V74|V75|V77)/i.exec(String(value||'').trim());return m?toNewSeries(m[1].toUpperCase()):'';}
+      function keyOf(series,category,gb,count){
+        return cfgSeries.includes(series)&&cfgCategories.includes(category)&&cfgRams.includes(Number(gb))&&cfgCounts.includes(Number(count))
           ? `${series}|${category}|${Number(gb)}|${Number(count)}` : '';
       }
-      function keySelected(){ return keyOf($('series').value,$('category').value,$('ramGb').value,$('ramCount').value); }
-      function keyEditing(){ return keyOf($('editSeries').value,$('editCategory').value,$('editRamGb').value,$('editRamCount').value); }
+      function keySelected(){return keyOf($('series').value,$('category').value,$('ramGb').value,$('ramCount').value);}
       function effectiveSpec(key){
         if(!key)return {value:null,source:'尚未選擇完整組合'};
-        if (has(drafts,key)) return {value:asWeight(drafts[key]),source:'本機 SPEC 草稿（尚未發布）'};
-        if (has(sharedSpecs,key)) return {value:asWeight(sharedSpecs[key]),source:'網站共用 SPEC'};
-        return {value:null,source:'尚未設定 SPEC'};
+        if(GOOGLE_MODE){
+          if(backendState!=='connected')return {value:null,source:'Google 連線未成功，暫不判定'};
+          return has(remoteSpecs,key) ? {value:asWeight(remoteSpecs[key]),source:'Google 試算表（共用）'} : {value:null,source:'Google 試算表（尚未設定）'};
+        }
+        return has(legacySpecs,key) ? {value:asWeight(legacySpecs[key]),source:'GitHub 已發布的 specs.js'} : {value:null,source:'GitHub specs.js（尚未設定）'};
       }
+      ingestLegacySpecs(sharedRoot);
       function format(n){
         return finiteNonnegative(n) ? n.toLocaleString('zh-TW',{maximumFractionDigits:6}) : '—';
       }
@@ -396,20 +456,8 @@
         storageAvailable=true;
         const a=JSON.parse(localStorage.getItem(storageKey)||'[]');
         if(Array.isArray(a))records=a;
-        const newer=localStorage.getItem(draftKey);
-        const existing=JSON.parse(newer===null?(localStorage.getItem(priorDraftKey)||'{}'):newer);
-        if(existing&&typeof existing==='object'&&!Array.isArray(existing)){
-          // 遷移舊 SPEC 草稿，轉成只保留加權上限的格式。
-          for(const [key,item] of Object.entries(existing)){
-            if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
-            const weighted=asWeight(item);
-            if(item===null)drafts[key]=null;
-            else if(finiteNonnegative(weighted))drafts[key]={weighted};
-          }
-          if(newer===null)localWrite(draftKey,drafts);
-        }
       }catch(error){
-        storageAvailable=false;records=[];drafts={};
+        storageAvailable=false;records=[];
       }
       function updateModeUi(){
         const manual=currentMode()==='manual';
@@ -433,7 +481,7 @@
         $('comparisonSpec').textContent=finiteNonnegative(value)?format(value):'未設定';
         $('comparisonGap').textContent=formatSigned(gap);
         const reason=!key?'請先選擇機種系列、分類、RAM 容量與條數。'
-          : !finiteNonnegative(value)?'此組尚未設定加權結果 SPEC。請到下方 SPEC 管理儲存草稿，或發布共用 SPEC。'
+          : !finiteNonnegative(value)?'此組尚未設定加權結果 SPEC。請到下方 SPEC 管理，使用 GitHub 或 Google 管理頁設定。'
           : !finiteNonnegative(total)?'請填齊四個自動換算所需原始值，或切換手動模式輸入四個星號值。'
           : status==='pass'?'PASS：加權結果小於或等於 SPEC 上限。'
           :'FAIL：加權結果大於 SPEC 上限。';
@@ -467,7 +515,7 @@
         const key=keySelected(),specInfo=effectiveSpec(key);
         $('specMatch').textContent=key?key.replace(/\|/g,' · '):'請選擇系列、分類、RAM 容量與條數。';
         $('previewSpecWeighted').textContent=finiteNonnegative(specInfo.value)?format(specInfo.value):'未設定';
-        $('previewSpecSource').textContent='SPEC 來源：'+specInfo.source+'。一般訪客無法修改網站已發布的 SPEC。';
+        $('previewSpecSource').textContent='SPEC 來源：'+specInfo.source+'。正式 SPEC 需由有權限者透過對應管理頁修改。';
         updateComparison(data.total,specInfo,key);
       }
       function cell(tr,value,emph=false){
@@ -477,7 +525,7 @@
         tr.appendChild(td);return td;
       }
       function recordView(record){
-        const calc=calcRecord(record),key=keyOf(record.series||seriesFromModel(record.model),record.category,record.ramGb,record.ramCount),spec=effectiveSpec(key).value;
+        const calc=calcRecord(record),key=keyOf(toNewSeries(record.series)||seriesFromModel(record.model),record.category,record.ramGb,record.ramCount),spec=effectiveSpec(key).value;
         const status=passFail(calc.total,spec);
         return {calc,key,spec,status};
       }
@@ -488,7 +536,7 @@
         $('clearAll').disabled=records.length===0;$('exportCsv').disabled=records.length===0;
         records.forEach((r,index)=>{
           const tr=document.createElement('tr'),view=recordView(r),c=view.calc.converted;
-          cell(tr,r.category||'未分類');cell(tr,r.series||seriesFromModel(r.model)||'—');cell(tr,r.model||'—',true);
+          cell(tr,r.category||'未分類');cell(tr,toNewSeries(r.series)||seriesFromModel(r.model)||'—');cell(tr,r.model||'—',true);
           cell(tr,`${r.ramGb||'—'} GB × ${r.ramCount||'—'} 條`);
           const gb=Number(r.ramGb),cnt=Number(r.ramCount);cell(tr,cfgRams.includes(gb)&&cfgCounts.includes(cnt)?gb*cnt+' GB':'—');
           cell(tr,view.calc.mode==='manual'?'手動填寫':'自動換算');
@@ -525,57 +573,85 @@
         renderRecords();form.reset();setTimeout(()=>{updateModeUi();updatePreview();},0);
         announce('notice',ok?'紀錄已儲存於目前瀏覽器。PASS／FAIL 依目前的 SPEC 上限計算。':'已加到畫面，但無法保存於瀏覽器；請立刻匯出 CSV。',ok?'success':'error');
       });
-      function loadEditor(){
-        const key=keyEditing(),raw=has(drafts,key)?drafts[key]:sharedSpecs[key];
-        const weighted=asWeight(raw);
-        $('editWeighted').value=finiteNonnegative(weighted)?String(weighted):'';
-        const source=has(drafts,key)?'本機草稿':has(sharedSpecs,key)?'網站共用版':'尚未設定';
-        $('editStatus').textContent=`正在編輯：${key.replace(/\|/g,' / ')}（目前來源：${source}）`;
-        announce('specNotice','');
+      function syncBanner(msg,state){$('specSyncStatus').textContent=msg;$('specSyncStatus').dataset.state=state;}
+      // Apps Script ContentService 官方支援唯讀 JSONP；禁止敏感資料經此端點提供。
+      // 這裡使用固定前綴、一次性 callback 與逾時處理，避免跨域 fetch CORS 問題。
+      function loadGoogleSpecs(){
+        return new Promise((resolve,reject)=>{
+          if(!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec\/?$/.test(GOOGLE_URL)){
+            reject(new Error('Google 網址無效。請在 spec-config.js 填入部署完成的 /exec 網址。'));return;
+          }
+          const name='engineeringSpecsCb'+(++jsonpSequence),script=document.createElement('script');
+          let finished=false;
+          const timer=setTimeout(()=>finish(new Error('Google SPEC 讀取逾時。請檢查 Apps Script 是否部署為網頁應用程式。')),14000);
+          function finish(err,data){
+            if(finished)return; finished=true;clearTimeout(timer);
+            if(script.parentNode)script.remove();
+            delete window[name];
+            if(err)reject(err);else resolve(data);
+          }
+          window[name]=data=>finish(null,data);
+          script.onerror=()=>finish(new Error('無法載入 Google Apps Script 回應。請確認公開讀取權限。'));
+          script.async=true;
+          script.src=GOOGLE_URL+(GOOGLE_URL.includes('?')?'&':'?')+'action=specs&prefix='+encodeURIComponent(name)+'&_='+Date.now();
+          document.head.appendChild(script);
+        });
       }
-      ['editSeries','editCategory','editRamGb','editRamCount'].forEach(id=>$(id).addEventListener('change',loadEditor));
-      $('resetSpecInputs').addEventListener('click',loadEditor);
-      $('saveSpecDraft').addEventListener('click',()=>{
-        const key=keyEditing(),raw=$('editWeighted').value.trim();
-        if(!key)return;
-        const val=raw===''?null:parsePositiveInput('editWeighted');
-        if(raw!==''&&!finiteNonnegative(val)){
-          announce('specNotice','請輸入大於或等於 0 的有效 SPEC，或留空代表移除此組 SPEC。','error');return;
+      function reloadGithubScript(){
+        return new Promise((resolve,reject)=>{
+          const s=document.createElement('script');
+          const timer=setTimeout(()=>{s.remove();reject(new Error('讀取 specs.js 逾時'));},12000);
+          s.onload=()=>{clearTimeout(timer);s.remove();ingestLegacySpecs(window.ENGINEERING_SPECS);resolve();};
+          s.onerror=()=>{clearTimeout(timer);s.remove();reject(new Error('讀取 GitHub specs.js 失敗'));};
+          s.src='./specs.js?refresh='+Date.now();s.async=true;document.head.appendChild(s);
+        });
+      }
+      let syncInProgress=false;
+      async function refreshSharedSpecs({showMessage=false}={}){
+        if(syncInProgress)return false;
+        syncInProgress=true;
+        try{
+          if(GOOGLE_MODE){
+            const data=await loadGoogleSpecs();
+            if(!data||data.ok!==true||!Array.isArray(data.items))throw new Error((data&&data.error)||'Google 回傳資料格式不符');
+            const next={};
+            for(const r of data.items){const key=keyOf(r.series,r.category,r.ramGb,r.ramCount);const val=numberFromRecord(r.weighted);if(key&&finiteNonnegative(val))next[key]={weighted:val};}
+            remoteSpecs=next;backendState='connected';
+            syncBanner('Google 試算表共用 SPEC 已連線。管理者可用 Google 管理頁編輯，其他使用者約每 30 秒重新讀取。','online');
+          }else{
+            await reloadGithubScript();backendState='connected';
+            syncBanner('GitHub 模式：目前顯示已發布的 specs.js。修改需使用 GitHub 寫入權限，提交後其他人重新載入即可取得更新。','online');
+          }
+          latestUpdatedAt=new Date();$('lastSync').textContent='最後更新：'+latestUpdatedAt.toLocaleTimeString('zh-TW');refreshAll();
+          if(showMessage)announce('specNotice','已成功讀取最新 SPEC。','success');return true;
+        }catch(err){
+          backendState='error';
+          const place=GOOGLE_MODE?'Google Apps Script':'GitHub specs.js';
+          syncBanner('無法讀取 '+place+'：'+err.message+'。請檢查設定與部署；Google 模式連線失敗時會暫停 PASS／FAIL 判定。','error');
+          $('lastSync').textContent='同步失敗';refreshAll();
+          if(showMessage)announce('specNotice','同步失敗：'+err.message,'error');
+          return false;
+        }finally{syncInProgress=false;}
+      }
+      const editDestination=GOOGLE_MODE?GOOGLE_URL:EDIT_REPO_URL;
+      $('specEditHelp').textContent=GOOGLE_MODE
+        ? 'Google 試算表模式：請點「開啟 SPEC 管理頁」，在 Google 管理頁輸入管理密碼授權後修改。儲存完成，其他人重新整理或等待最多約 30 秒就會取得新數值。'
+        : 'GitHub 模式：請點「開啟 SPEC 管理頁」前往編輯 specs.js。只有擁有 Repository 寫入權限的 GitHub 帳號能提交，沒有單獨的 EVAN 網頁管理密碼。';
+      $('openSpecEditor').addEventListener('click',()=>{
+        if(GOOGLE_MODE && !/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec\/?$/.test(GOOGLE_URL)){
+          announce('specNotice','Google 管理頁 URL 格式錯誤，請先依說明設定 spec-config.js。','error');return;
         }
-        drafts[key]=val===null?null:{weighted:val};
-        const ok=localWrite(draftKey,drafts);
-        loadEditor();refreshAll();
-        announce('specNotice',ok?'已儲存本機 SPEC 草稿，本機 PASS／FAIL 立即依此數值判斷。要讓所有人共用，還需要匯出並發布 specs.js。':'本機儲存不可用，這次變更只會暫存於目前頁面。',ok?'success':'error');
+        window.open(editDestination,'_blank','noopener,noreferrer');
       });
-      function mergeSpecs(){
-        const merged={};
-        for(const [key,spec] of Object.entries(sharedSpecs)){
-          if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
-          const value=asWeight(spec);if(finiteNonnegative(value))merged[key]={weighted:value};
-        }
-        for(const [key,spec] of Object.entries(drafts)){
-          if(!/^V7(?:4|5|7)\|(CEL|Energy Star 9\.0)\|(8|16|32)\|(1|2)$/.test(key))continue;
-          const value=asWeight(spec);
-          if(finiteNonnegative(value))merged[key]={weighted:value};else delete merged[key];
-        }
-        return merged;
-      }
+      $('refreshSpecs').addEventListener('click',()=>refreshSharedSpecs({showMessage:true}));
+      window.addEventListener('focus',()=>{if(document.body.classList.contains('is-logged-in'))refreshSharedSpecs();});
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.body.classList.contains('is-logged-in'))refreshSharedSpecs();});
+      setInterval(()=>{if(!document.hidden&&document.body.classList.contains('is-logged-in'))refreshSharedSpecs();},30000);
       function download(text,mime,filename){
         const blob=new Blob([text],{type:mime}),url=URL.createObjectURL(blob),link=document.createElement('a');
         link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
         setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
-      $('exportSpecJs').addEventListener('click',()=>{
-        const obj={schemaVersion:2,updatedAt:new Date().toISOString(),items:mergeSpecs()};
-        const content='// 工程數值計算工具 V1.6 — 網站共用加權結果 SPEC，更新須經 GitHub 發布。\nwindow.ENGINEERING_SPECS = '+JSON.stringify(obj,null,2)+';\n';
-        download(content,'text/javascript;charset=utf-8','specs.js');
-        announce('specNotice','已下載 specs.js；請上傳並提交到 GitHub 原網站，其他人的手機與電腦才會更新。','success');
-      });
-      $('clearDrafts').addEventListener('click',()=>{
-        if(!confirm('確定清除這台裝置的全部 SPEC 草稿？網站共用 SPEC 不受影響。'))return;
-        drafts={};localWrite(draftKey,drafts);loadEditor();refreshAll();
-        announce('specNotice','本機草稿已清除，改用網站共用 SPEC 判斷。','success');
-      });
       function safeCsv(val){
         let s=String(val??'');
         if(typeof val==='string'&&/^[\s]*[=+@-]/.test(s))s="'"+s;
@@ -586,10 +662,10 @@
         const header=['測試分類','機種系列','完整機種名稱','單條RAM(GB)','RAM條數','總RAM(GB)','原始單位','換算模式','Short idle原始','Long idle原始','S3或Modern Standby原始','S5原始','Short idle*','Long idle*','S3*','S5*','加權結果','加權SPEC(KW/Hr)','判定'];
         const rows=records.map(r=>{
           const v=recordView(r),c=v.calc.converted;
-          return [r.category||'未分類',r.series||seriesFromModel(r.model),r.model,r.ramGb,r.ramCount,Number(r.ramGb)*Number(r.ramCount),r.unit,v.calc.mode==='manual'?'手動填寫':'自動換算',r.shortIdle??'',r.longIdle??'',r.sleepValue??'',r.s5??'',c.a??'',c.b??'',c.c??'',c.d??'',v.calc.total??'',v.spec??'',v.status==='pending'?'未判定':v.status.toUpperCase()];
+          return [r.category||'未分類',toNewSeries(r.series)||seriesFromModel(r.model),r.model,r.ramGb,r.ramCount,Number(r.ramGb)*Number(r.ramCount),r.unit,v.calc.mode==='manual'?'手動填寫':'自動換算',r.shortIdle??'',r.longIdle??'',r.sleepValue??'',r.s5??'',c.a??'',c.b??'',c.c??'',c.d??'',v.calc.total??'',v.spec??'',v.status==='pending'?'未判定':v.status.toUpperCase()];
         });
         const csv='\ufeff'+[header,...rows].map(row=>row.map(safeCsv).join(',')).join('\r\n');
-        download(csv,'text/csv;charset=utf-8','engineering_calculator_v1-6.csv');
+        download(csv,'text/csv;charset=utf-8','engineering_calculator_v1-9.csv');
         announce('notice','已匯出 CSV，包含換算模式、加權 SPEC 與 PASS／FAIL（按目前可見的 SPEC 判定）。','success');
       });
       $('clearAll').addEventListener('click',()=>{
@@ -597,9 +673,9 @@
         records=[];localWrite(storageKey,records);renderRecords();
         announce('notice','本機測試紀錄已清除。','success');
       });
-      updateModeUi();loadEditor();refreshAll();
+      updateModeUi();refreshAll();refreshSharedSpecs();
       if(!storageAvailable)announce('notice','目前瀏覽器無法使用本機儲存；仍可計算，但記錄及 SPEC 草稿關閉後可能遺失。','error');
-      if(!window.ENGINEERING_SPECS)announce('specNotice','未載入 specs.js。請確認 index.html 與 specs.js 位於同一資料夾或同一網站目錄。','error');
+      if(!window.ENGINEERING_SPECS && !GOOGLE_MODE)syncBanner('未載入 specs.js：GitHub 模式需要此檔案。請檢查 GitHub Repository 根目錄。','error');
     })();
 
   </script>
